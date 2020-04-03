@@ -15,8 +15,6 @@ class Creature:
         self.breed = breed
         self.days = 1
 
-
-
         self.terretory = pg.sprite.Group()
 
         self.body = pg.sprite.Sprite()
@@ -41,17 +39,14 @@ class Creature:
         self.terretory.add(self.sens_circ)
         self.terretory.add(self.body)
 
-        pg.draw.circle(self.sens_circ.image,
-                       color2,
-                       (sens, sens),
-                       sens)
-
-        self.center = (self.body.rect.x - self.sens, self.body.rect.y)
-        self.angle = 0
+        pg.draw.ellipse(self.sens_circ.image,
+                        self.color2,
+                        self.sens_circ.image.get_rect())
 
         self.energy = 2.5
         self.speed = 1
         self.birth_enr = 5
+        self.weight = self.w * self.h
 
         self.f = pg.font.Font(None, 15)
         self.brd_info = self.f.render(str(self.breed), 0, (255, 255, 255))
@@ -94,13 +89,24 @@ class Creature:
         if self.energy > 8.5:
             g = clamp(int((self.energy - 8.5) * 255))
         b = clamp(int(self.color1[2] * self.energy / 5.5))
-        self.sens_circ.image = pg.Surface([self.sens * 2, self.sens * 2])
+
+        if self.body.rect.w != self.w:
+            self.body.image = pg.Surface([self.w, self.h])
+            self.body.rect.w = self.w
+            self.body.rect.x += (self.w - self.body.rect.w) // 2
+            self.weight = self.w * self.h
+        if self.body.rect.h != self.h:
+            self.body.image = pg.Surface([self.w, self.h])
+            self.body.rect.h = self.h
+            self.body.rect.y -= (self.h - self.body.rect.h) // 2
+            self.weight = self.w * self.h
+
+        self.sens_circ.image = pg.Surface([self.sens * 2 + self.w - 5, self.sens * 2 + self.h - 5])
         self.sens_circ.image.fill((0, 0, 0))
         self.sens_circ.image.set_colorkey((0, 0, 0))
-        pg.draw.circle(self.sens_circ.image,
-                       self.color2,
-                       (self.sens, self.sens),
-                       self.sens)
+        pg.draw.ellipse(self.sens_circ.image,
+                        self.color2,
+                        self.sens_circ.image.get_rect())
         self.body.image.fill((r, g, b))
 
         self.sens_circ.image.blit(self.brd_info, (18, 12 + 3 * HCR))

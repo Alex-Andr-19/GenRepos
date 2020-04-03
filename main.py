@@ -1,7 +1,7 @@
 import pygame as pg
 
 from copy_Food import Food
-from Creature import Creature
+from copy_Creature import Creature
 
 from random import randint as rand
 from copy_lib_func import *
@@ -25,6 +25,7 @@ crts_gr = pg.sprite.Group()
 deadb_gr = pg.sprite.Group()
 deads_gr = pg.sprite.Group()
 
+vis_gr = []
 crt_mas = [Creature(WCR, HCR, SENS) for i in range(count_crt)]
 fd_mas = [Food() for i in range(COUNT_FD)]
 
@@ -43,7 +44,7 @@ f = pg.font.Font(None, 36)
 index = [fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr) for i in range(count_crt)]
 
 while run:
-    l1 = f.render("Creatures - " + str(len(crtb_gr) // 2), 1, (255, 255, 255))
+    l1 = f.render("Creatures - " + str(len(crtb_gr)), 1, (255, 255, 255))
     l2 = f.render("Alive      - " + str(alive), 1, (255, 255, 255))
     l3 = f.render("Food      - " + str(len(fd_gr)), 1, (255, 255, 255))
     l4 = f.render("Days      - " + str(days), 1, (255, 255, 255))
@@ -75,14 +76,19 @@ while run:
                 fd_mas[i].fading()
 
     # видит ли особь еду
+    prev_len = 0
     for i in range(count_crt):
-        vis_gr = pg.sprite.spritecollide(crt_mas[i].sens_circ, fd_gr, False)
-        if len(vis_gr) and index[i] >= 0:
-            for j in range(len(vis_gr)):
-                vis_gr[j].image.fill((255, 0, 0))
-            for o in range(len(fd_mas)):
-                if fd_mas[o] in vis_gr:
-                    fd_mas[o].color = (255, 0, 0)
+        vis_gr += pg.sprite.spritecollide(crt_mas[i].sens_circ, fd_gr, False)
+        if index[i] == -1:
+            while len(vis_gr) != prev_len:
+                del vis_gr[-1]
+        if len(vis_gr) - prev_len:
+            for j in range(len(vis_gr) - prev_len):
+                vis_gr[j + prev_len].image.fill((255, 0, 0))
+            prev_len = len(vis_gr)
+
+    for i in range(len(vis_gr)):
+        vis_gr[i].color = (255, 0, 0)
 
     # передвижение каждой особи
     for i in range(count_crt):
@@ -139,22 +145,21 @@ while run:
                 crt_mas[-1].birth_enr = crt_mas[i].birth_enr
                 crt_mas[-1].speed = crt_mas[i].speed
                 crt_mas[-1].color2 = crt_mas[i].color2
-
-#                crt_gr.add(crt_mas[-1].terretory)
-                crtb_gr.add(crt_mas[-1].body)
-                crts_gr.add(crt_mas[-1].sens_circ)
-                all_s.add(crt_mas[-1].terretory)
-                count_crt += 1
+                crt_mas[-1].w = crt_mas[i].w
+                crt_mas[-1].h = crt_mas[i].h
+                crt_mas[-1].body.rect.w = crt_mas[i].w
+                crt_mas[-1].body.rect.h = crt_mas[i].h
+                crt_mas[-1].body.image = pg.Surface((crt_mas[i].w, crt_mas[i].h))
 
                 # мутация
                 # скорость
                 chance = rand(0, 100)
-                if 50 <= chance < 75 and crt_mas[-1].speed != clamp(crt_mas[-1].speed - 1, 5, 1):
+                if 90 <= chance < 95 and crt_mas[-1].speed != clamp(crt_mas[-1].speed - 1, 5, 1):
                     crt_mas[-1].color2 = (clamp(crt_mas[-1].color2[0] - 13),
                                           crt_mas[-1].color2[1],
                                           crt_mas[-1].color2[2])
                     crt_mas[-1].speed = clamp(crt_mas[-1].speed - 1, 5, 1)
-                elif chance >= 75 and crt_mas[-1].speed != clamp(crt_mas[-1].speed + 1, 5, 1):
+                elif chance >= 95 and crt_mas[-1].speed != clamp(crt_mas[-1].speed + 1, 5, 1):
                     crt_mas[-1].color2 = (clamp(crt_mas[-1].color2[0] + 13),
                                           crt_mas[-1].color2[1],
                                           crt_mas[-1].color2[2])
@@ -162,16 +167,30 @@ while run:
 
                 # размножение
                 chance = rand(0, 100)
-                if 50 <= chance < 75 and crt_mas[-1].birth_enr != clamp(crt_mas[-1].birth_enr + 1, 5, 1):
+                if 90 <= chance < 95 and crt_mas[-1].birth_enr != clamp(crt_mas[-1].birth_enr + 1, 5, 1):
                     crt_mas[-1].color2 = (crt_mas[-1].color2[0],
                                           clamp(crt_mas[-1].color2[1] - 13),
                                           crt_mas[-1].color2[2])
                     crt_mas[-1].birth_enr = clamp(crt_mas[-1].birth_enr + 1, 5, 2)
-                elif chance >= 75 and crt_mas[-1].birth_enr != clamp(crt_mas[-1].birth_enr - 1, 5, 1):
+                elif chance >= 95 and crt_mas[-1].birth_enr != clamp(crt_mas[-1].birth_enr - 1, 5, 1):
                     crt_mas[-1].color2 = (crt_mas[-1].color2[0],
                                           clamp(crt_mas[-1].color2[1] + 13),
                                           crt_mas[-1].color2[2])
                     crt_mas[-1].birth_enr = clamp(crt_mas[-1].birth_enr - 1, 5, 2)
+
+                # размер: ширина
+                chance = rand(0, 100)
+                if 90 <= chance < 95:
+                    crt_mas[-1].w += 2
+                elif 95 <= chance:
+                    crt_mas[-1].w -= 2
+
+                # размер: высота
+                chance = rand(0, 100)
+                if 90 <= chance < 95:
+                    crt_mas[-1].h += 2
+                elif 95 <= chance:
+                    crt_mas[-1].h -= 2
 
                 # статистика
                 if len(breed_mas) < crt_mas[-1].breed:
@@ -179,6 +198,11 @@ while run:
                 else:
                     breed_mas[crt_mas[-1].breed - 1] += 1
                 alive += 1
+
+                crtb_gr.add(crt_mas[-1].body)
+                crts_gr.add(crt_mas[-1].sens_circ)
+                all_s.add(crt_mas[-1].terretory)
+                count_crt += 1
 
                 # затраты на рождение
                 tmp -= crt_mas[i].birth_enr
@@ -201,6 +225,7 @@ while run:
             fd_mas[i].rect.x = rand(WCR, SCR_W - WCR)
             fd_mas[i].rect.y = rand(HCR, SCR_H - HCR)
             fd_mas[i].image.fill((0, 255, 0))
+            fd_mas[i].color = (0, 255, 0)
             fd_gr.add(fd_mas[i])
             all_s.add(fd_mas[i])
 
@@ -234,10 +259,11 @@ while run:
         crt_mas[0].senc_circ.rect.y += 2
 '''
     brd_info = ""
+    vis_gr = []
     window.blit(l1, (20, 15))
     window.blit(l2, (40, 40))
     window.blit(l3, (41, 65))
     window.blit(l4, (44, 86))
     window.blit(l6, (20, 110))
-    pg.time.delay(4)
+    pg.time.delay(10)
     pg.display.update()

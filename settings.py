@@ -8,9 +8,8 @@ SENS = 30
 
 WF = HF = 4
 
-COUNT_CRT = 20
-print(int(SCR_W * SCR_H * 0.00121))
-COUNT_FD = int(SCR_W * SCR_H * 0.00121)
+COUNT_CRT = 5
+COUNT_FD = int(SCR_W * SCR_H * 0.00075)
 
 FD_EN = 0.25
 

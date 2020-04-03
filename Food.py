@@ -6,7 +6,6 @@ from settings import *
 class Food(pg.sprite.Sprite):
     def __init__(self, color=(0, 255, 0)):
         super().__init__()
-        # self.food = pg.sprite.Sprite()
         self.image = pg.Surface([WF, HF])
         self.rect = self.image.get_rect()
         self.rect.x = rand(0, SCR_W - WCR)
