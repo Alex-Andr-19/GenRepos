@@ -1,10 +1,10 @@
 import pygame as pg
 
-from copy_Food import Food
-from copy_Creature import Creature
+from Food import Food
+from Creature import Creature
 
 from random import randint as rand
-from copy_lib_func import *
+from lib_func import *
 from settings import *
 
 count_crt = COUNT_CRT
