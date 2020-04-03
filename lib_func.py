@@ -28,13 +28,13 @@ def fn_nrst_trg(crt, crt_mas, fd_mas, crt_gr, dead_gr, fd_gr, without=[]):
 
     if len(crt_gr) - len(dead_gr) > len(fd_gr):
         for i in range(len(fd_mas)):
-            if min_dis > distance_s(crt.body, fd_mas[i].food) and fd_mas[i].food in fd_gr:
-                min_dis = distance_s(crt.body, fd_mas[i].food)
+            if min_dis > distance_s(crt.body, fd_mas[i]) and fd_mas[i] in fd_gr:
+                min_dis = distance_s(crt.body, fd_mas[i])
                 index = i
     else:
         for i in range(len(fd_mas)):
-            if min_dis > distance_s(crt.body, fd_mas[i].food) and fd_mas[i].food in fd_gr and i not in without:
-                min_dis = distance_s(crt.body, fd_mas[i].food)
+            if min_dis > distance_s(crt.body, fd_mas[i]) and fd_mas[i] in fd_gr and i not in without:
+                min_dis = distance_s(crt.body, fd_mas[i])
                 index = i
 
     for i in range(len(crt_mas)):

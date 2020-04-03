@@ -1,10 +1,10 @@
 import pygame as pg
 
-from Food import Food
+from copy_Food import Food
 from Creature import Creature
 
 from random import randint as rand
-from lib_func import *
+from copy_lib_func import *
 from settings import *
 
 count_crt = COUNT_CRT
@@ -36,8 +36,8 @@ for i in range(count_crt):
     all_s.add(crt_mas[i].terretory)
 
 for i in range(COUNT_FD):
-    all_s.add(fd_mas[i].food)
-    fd_gr.add(fd_mas[i].food)
+    all_s.add(fd_mas[i])
+    fd_gr.add(fd_mas[i])
 
 f = pg.font.Font(None, 36)
 index = [fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr) for i in range(count_crt)]
@@ -68,22 +68,31 @@ while run:
     fd_gr.draw(window)
     crtb_gr.draw(window)
 
+    temp_time = pg.time.get_ticks()
+    if (temp_time - START_TIME) % 10 == 0:
+        for i in range(len(fd_mas)):
+            if fd_mas[i].color[0]:
+                fd_mas[i].fading()
+
     # видит ли особь еду
     for i in range(count_crt):
         vis_gr = pg.sprite.spritecollide(crt_mas[i].sens_circ, fd_gr, False)
         if len(vis_gr) and index[i] >= 0:
             for j in range(len(vis_gr)):
                 vis_gr[j].image.fill((255, 0, 0))
+            for o in range(len(fd_mas)):
+                if fd_mas[o] in vis_gr:
+                    fd_mas[o].color = (255, 0, 0)
 
     # передвижение каждой особи
     for i in range(count_crt):
             tmp = 1
             if index[i] < len(fd_mas):
-                if (crt_mas[i].body.rect.x != fd_mas[index[i]].food.rect.x or
-                    crt_mas[i].body.rect.y != fd_mas[index[i]].food.rect.y) and \
+                if (crt_mas[i].body.rect.x != fd_mas[index[i]].rect.x or
+                    crt_mas[i].body.rect.y != fd_mas[index[i]].rect.y) and \
                         index[i] != -1:
 
-                    tmp = crt_mas[i].go_to_targer(fd_mas[index[i]].food)
+                    tmp = crt_mas[i].go_to_targer(fd_mas[index[i]])
             else:
                 if (crt_mas[i].body.rect.x != crt_mas[clamp(index[i] - len(fd_mas), len(crt_mas) - 1)].body.rect.x or
                     crt_mas[i].body.rect.y != crt_mas[clamp(index[i] - len(fd_mas), len(crt_mas) - 1)].body.rect.y) and \
@@ -178,7 +187,7 @@ while run:
     # пересчёт следущей цели-еды
     for i in range(count_crt):
         if index[i] < len(fd_mas):
-            if fd_mas[index[i]].food not in fd_gr and index[i] != -1:
+            if fd_mas[index[i]] not in fd_gr and index[i] != -1:
                index[i] = fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr,
                                       [index[j] for j in range(count_crt) if j != i])
         elif crt_mas[clamp(index[i] - len(fd_mas), len(crt_mas) - 1)].body not in crtb_gr:
@@ -189,11 +198,11 @@ while run:
     if len(fd_gr) < COUNT_FD // 100 * 5:
         # генерация нового поля еды
         for i in range(COUNT_FD - len(fd_gr)):
-            fd_mas[i].food.rect.x = rand(WCR, SCR_W - WCR)
-            fd_mas[i].food.rect.y = rand(HCR, SCR_H - HCR)
-            fd_mas[i].food.image.fill((0, 255, 0))
-            fd_gr.add(fd_mas[i].food)
-            all_s.add(fd_mas[i].food)
+            fd_mas[i].rect.x = rand(WCR, SCR_W - WCR)
+            fd_mas[i].rect.y = rand(HCR, SCR_H - HCR)
+            fd_mas[i].image.fill((0, 255, 0))
+            fd_gr.add(fd_mas[i])
+            all_s.add(fd_mas[i])
 
         # навый подсчет целей-еды для каждой живой особи (чтобы не бежали все в одну сторону)
         for i in range(count_crt):
@@ -230,5 +239,5 @@ while run:
     window.blit(l3, (41, 65))
     window.blit(l4, (44, 86))
     window.blit(l6, (20, 110))
-    pg.time.delay(10)
+    pg.time.delay(4)
     pg.display.update()
