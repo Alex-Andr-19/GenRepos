@@ -18,5 +18,5 @@ class Food(pg.sprite.Sprite):
         return "Food"
 
     def fading(self):
-        self.image.fill((clamp(self.color[0] - 17), clamp(self.color[1] + 17), 0))
-        self.color = (clamp(self.color[0] - 17), clamp(self.color[1] + 17), 0)
+        self.image.fill((clamp(self.color[0] - STEP_FAD), clamp(self.color[1] + STEP_FAD), 0))
+        self.color = (clamp(self.color[0] - STEP_FAD), clamp(self.color[1] + STEP_FAD), 0)

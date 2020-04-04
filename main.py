@@ -8,26 +8,26 @@ from lib_func import *
 from settings import *
 
 count_crt = COUNT_CRT
-alive = count_crt
-days = 1
-brd_info = ""
-iterator = 0
+alive     = count_crt
+days      = 1
+brd_info  = ""
+iterator  = 0
 
 pg.init()
 
 window = pg.display.set_mode((SCR_W, SCR_H))
 run = 1
 
-all_s = pg.sprite.Group()
-fd_gr = pg.sprite.Group()
-crtb_gr = pg.sprite.Group()
-crts_gr = pg.sprite.Group()
+all_s    = pg.sprite.Group()
+fd_gr    = pg.sprite.Group()
+crtb_gr  = pg.sprite.Group()
+crts_gr  = pg.sprite.Group()
 deadb_gr = pg.sprite.Group()
 deads_gr = pg.sprite.Group()
 
-vis_gr = []
-crt_mas = [Creature(WCR, HCR, SENS) for i in range(count_crt)]
-fd_mas = [Food() for i in range(COUNT_FD)]
+vis_gr   = []
+crt_mas  = [Creature(WCR, HCR, SENS) for i in range(count_crt)]
+fd_mas   = [Food() for i in range(COUNT_FD)]
 
 breed_mas = [count_crt]
 
@@ -96,22 +96,25 @@ while run:
             if index[i] < len(fd_mas):
                 if (crt_mas[i].body.rect.x != fd_mas[index[i]].rect.x or
                     crt_mas[i].body.rect.y != fd_mas[index[i]].rect.y) and \
-                        index[i] != -1:
+                    index[i] != -1:
 
                     tmp = crt_mas[i].go_to_targer(fd_mas[index[i]])
             else:
                 if (crt_mas[i].body.rect.x != crt_mas[clamp(index[i] - len(fd_mas), len(crt_mas) - 1)].body.rect.x or
                     crt_mas[i].body.rect.y != crt_mas[clamp(index[i] - len(fd_mas), len(crt_mas) - 1)].body.rect.y) and \
-                        index[i] != -1:
+                    index[i] != -1:
+
                     tmp = crt_mas[i].go_to_targer(crt_mas[clamp(index[i] - len(fd_mas), len(crt_mas) - 1)].body)
+
             # регестрация гибели
             if tmp == 0:
-                alive -= 1
+                alive   -= 1
                 index[i] = -1
                 deadb_gr.add(crt_mas[i].body)
                 deads_gr.add(crt_mas[i].sens_circ)
                 breed_mas[crt_mas[i].breed - 1] -= 1
                 crt_mas[i].color2 = (60, 60, 60)
+
             crt_mas[i].center = (crt_mas[i].body.rect.x - crt_mas[i].sens, crt_mas[i].body.rect.y)
 
     # обработка энергии
@@ -121,14 +124,16 @@ while run:
         if len(hit_gr):
             for j in range(len(hit_gr)):
                 crt_mas[i].energy += FD_EN
-        # съела ли особь особь
+        # съела ли особь мёртвую особь
         if index[i] >= 0:
             hit_gr = pg.sprite.spritecollide(crt_mas[i].body, deadb_gr, True)
             if len(hit_gr):
-                # for j in range(len(hit_gr)):
-                crt_mas[i].energy += 0.5
-                hit_gr_dead = pg.sprite.spritecollide(crt_mas[i].body, deads_gr, True)
-                hit_gr_dead = pg.sprite.spritecollide(crt_mas[i].body, deadb_gr, True)
+                while crt_mas[iterator].body not in hit_gr:
+                    iterator += 1
+                crt_mas[i].energy += 0.5 * crt_mas[iterator].weight / 64
+                hit_gr_dead  = pg.sprite.spritecollide(crt_mas[i].body, deads_gr, True)
+                hit_gr_dead += pg.sprite.spritecollide(crt_mas[i].body, deadb_gr, True)
+                iterator     = 0
 
         # рождение
         if crt_mas[i].energy > 9.8:
@@ -141,15 +146,7 @@ while run:
                 crt_mas.append(Creature(WCR, HCR, SENS, cords, crt_mas[i].breed+1))
                 index.append(fn_nrst_trg(crt_mas[-1], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr, [index[j] for j in range(count_crt) if j != i]))
 
-                crt_mas[-1].energy = crt_mas[i].birth_enr / 1.5
-                crt_mas[-1].birth_enr = crt_mas[i].birth_enr
-                crt_mas[-1].speed = crt_mas[i].speed
-                crt_mas[-1].color2 = crt_mas[i].color2
-                crt_mas[-1].w = crt_mas[i].w
-                crt_mas[-1].h = crt_mas[i].h
-                crt_mas[-1].body.rect.w = crt_mas[i].w
-                crt_mas[-1].body.rect.h = crt_mas[i].h
-                crt_mas[-1].body.image = pg.Surface((crt_mas[i].w, crt_mas[i].h))
+                crt_mas[i].copy_to(crt_mas[-1])
 
                 # мутация
                 # скорость
@@ -182,15 +179,21 @@ while run:
                 chance = rand(0, 100)
                 if 90 <= chance < 95:
                     crt_mas[-1].w += 2
+                    crt_mas[-1].weight = crt_mas[-1].w * crt_mas[-1].h
                 elif 95 <= chance:
                     crt_mas[-1].w -= 2
+                    crt_mas[-1].weight = crt_mas[-1].w * crt_mas[-1].h
 
                 # размер: высота
                 chance = rand(0, 100)
                 if 90 <= chance < 95:
                     crt_mas[-1].h += 2
+                    crt_mas[-1].weight = crt_mas[-1].w * crt_mas[-1].h
                 elif 95 <= chance:
                     crt_mas[-1].h -= 2
+                    crt_mas[-1].weight = crt_mas[-1].w * crt_mas[-1].h
+
+                print(crt_mas[-1].weight)
 
                 # статистика
                 if len(breed_mas) < crt_mas[-1].breed:
@@ -221,13 +224,14 @@ while run:
     # генерация нового дня
     if len(fd_gr) < COUNT_FD // 100 * 5:
         # генерация нового поля еды
-        for i in range(COUNT_FD - len(fd_gr)):
-            fd_mas[i].rect.x = rand(WCR, SCR_W - WCR)
-            fd_mas[i].rect.y = rand(HCR, SCR_H - HCR)
-            fd_mas[i].image.fill((0, 255, 0))
-            fd_mas[i].color = (0, 255, 0)
-            fd_gr.add(fd_mas[i])
-            all_s.add(fd_mas[i])
+        for i in range(COUNT_FD):
+            if fd_mas[i] not in fd_gr:
+                fd_mas[i].rect.x = rand(WCR, SCR_W - WCR)
+                fd_mas[i].rect.y = rand(HCR, SCR_H - HCR)
+                fd_mas[i].image.fill((0, 255, 0))
+                fd_mas[i].color  = (0, 255, 0)
+                fd_gr.add(fd_mas[i])
+                all_s.add(fd_mas[i])
 
         # навый подсчет целей-еды для каждой живой особи (чтобы не бежали все в одну сторону)
         for i in range(count_crt):
@@ -236,13 +240,12 @@ while run:
             crt_mas[i].days += 1
 
         # очистка "памяти" от съеденных особей
-        index = [index[i] for i in range(count_crt) if crt_mas[i].body in crtb_gr]
-        crt_mas = [crt_mas[i] for i in range(count_crt) if crt_mas[i].body in crtb_gr]
+        index     = [index[i] for i in range(count_crt) if crt_mas[i].body in crtb_gr]
+        crt_mas   = [crt_mas[i] for i in range(count_crt) if crt_mas[i].body in crtb_gr]
         count_crt = len(crt_mas)
 
         # обновление дня
         days += 1
-        aver_days = 0
 
     '''keys = pg.key.get_pressed()
     if keys[pg.K_RIGHT] and crt_mas[0].body.rect.x + 20 < 495:
@@ -259,7 +262,7 @@ while run:
         crt_mas[0].senc_circ.rect.y += 2
 '''
     brd_info = ""
-    vis_gr = []
+    vis_gr   = []
     window.blit(l1, (20, 15))
     window.blit(l2, (40, 40))
     window.blit(l3, (41, 65))

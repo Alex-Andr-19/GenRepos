@@ -1,6 +1,6 @@
 import pygame as pg
 from random import randint as rand
-from math import fabs, cos, sin, pi
+from math import fabs, cos, sin, pi, ceil
 from lib_func import clamp
 from settings import *
 
@@ -31,8 +31,8 @@ class Creature:
         self.sens_circ = pg.sprite.Sprite()
         self.sens_circ.image = pg.Surface([sens*2, sens*2])
         self.sens_circ.rect = self.sens_circ.image.get_rect()
-        self.sens_circ.rect.x = self.body.rect.x - sens + w//2
-        self.sens_circ.rect.y = self.body.rect.y - sens + h//2
+        self.sens_circ.rect.x = self.body.rect.x - sens + ceil(w/2)
+        self.sens_circ.rect.y = self.body.rect.y - sens + ceil(h/2)
         self.sens_circ.image.fill(fon_c)
         self.sens_circ.image.set_colorkey(fon_c)
 
@@ -79,7 +79,7 @@ class Creature:
                 else:
                     self.body.rect.y += 1
                     self.sens_circ.rect.y += 1
-            self.energy = clamp(self.energy - 0.005, 10)
+            self.energy = clamp(self.energy - 0.006 * self.weight / 64, 10)
 
 
         r = clamp(int(self.color1[0] * self.energy))
@@ -98,7 +98,7 @@ class Creature:
         if self.body.rect.h != self.h:
             self.body.image = pg.Surface([self.w, self.h])
             self.body.rect.h = self.h
-            self.body.rect.y -= (self.h - self.body.rect.h) // 2
+            # self.body.rect.y -= (self.h - self.body.rect.h) // 2
             self.weight = self.w * self.h
 
         self.sens_circ.image = pg.Surface([self.sens * 2 + self.w - 5, self.sens * 2 + self.h - 5])
@@ -123,6 +123,18 @@ class Creature:
         if not self.energy:
             return 0
         return 1
+
+    def copy_to(self, tmp):
+        tmp.color2 = self.color2
+        tmp.w = self.w
+        tmp.h = self.h
+        tmp.body.rect.w = self.w
+        tmp.body.rect.h = self.h
+        tmp.body.image = pg.Surface((self.w, self.h))
+        tmp.energy = self.birth_enr / 1.5
+        tmp.birth_enr = self.birth_enr
+        tmp.speed = self.speed
+        tmp.weight = self.weight
 
     def just_walk(self, start_w):
         for i in range(self.speed):
