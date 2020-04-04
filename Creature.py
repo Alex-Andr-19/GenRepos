@@ -47,6 +47,9 @@ class Creature:
         self.speed = 1
         self.birth_enr = 5
         self.weight = self.w * self.h
+        self.name = rand(1, 1000001)
+        self.parent_name = 0
+        self.child_name = 0
 
         self.f = pg.font.Font(None, 15)
         self.brd_info = self.f.render(str(self.breed), 0, (255, 255, 255))
@@ -61,26 +64,46 @@ class Creature:
         return "Creature"
 
     def go_to_targer(self, targ):
-        x_t = targ.rect.x
-        y_t = targ.rect.y
+        if targ.type() == "Food":
+            x_t = targ.rect.x
+            y_t = targ.rect.y
 
-        for i in range(self.speed):
-            if fabs(self.body.rect.x - x_t) > fabs(self.body.rect.y - y_t):
-                if self.body.rect.x > x_t:
-                    self.body.rect.x -= 1
-                    self.sens_circ.rect.x -= 1
+            for i in range(self.speed):
+                if fabs(self.body.rect.x - x_t) > fabs(self.body.rect.y - y_t):
+                    if self.body.rect.x > x_t:
+                        self.body.rect.x -= 1
+                        self.sens_circ.rect.x -= 1
+                    else:
+                        self.body.rect.x += 1
+                        self.sens_circ.rect.x += 1
                 else:
-                    self.body.rect.x += 1
-                    self.sens_circ.rect.x += 1
-            else:
-                if self.body.rect.y > y_t:
-                    self.body.rect.y -= 1
-                    self.sens_circ.rect.y -= 1
-                else:
-                    self.body.rect.y += 1
-                    self.sens_circ.rect.y += 1
-            self.energy = clamp(self.energy - 0.006 * self.weight / 64, 10)
+                    if self.body.rect.y > y_t:
+                        self.body.rect.y -= 1
+                        self.sens_circ.rect.y -= 1
+                    else:
+                        self.body.rect.y += 1
+                        self.sens_circ.rect.y += 1
+                self.energy = clamp(self.energy - 0.006 * self.weight / 64, 10)
+        else:
+            x_t = targ.body.rect.x
+            y_t = targ.body.rect.y
 
+            for i in range(self.speed):
+                if fabs(self.body.rect.x - x_t) > fabs(self.body.rect.y - y_t):
+                    if self.body.rect.x > x_t:
+                        self.body.rect.x -= 1
+                        self.sens_circ.rect.x -= 1
+                    else:
+                        self.body.rect.x += 1
+                        self.sens_circ.rect.x += 1
+                else:
+                    if self.body.rect.y > y_t:
+                        self.body.rect.y -= 1
+                        self.sens_circ.rect.y -= 1
+                    else:
+                        self.body.rect.y += 1
+                        self.sens_circ.rect.y += 1
+                self.energy = clamp(self.energy - 0.006 * self.weight / 64, 10)
 
         r = clamp(int(self.color1[0] * self.energy))
         if self.energy > 5.5:
@@ -121,6 +144,7 @@ class Creature:
         # self.sens_circ.image.blit(self.birth_info, (11 + 4*WCR, 25))
 
         if not self.energy:
+            self.dead()
             return 0
         return 1
 
@@ -135,6 +159,15 @@ class Creature:
         tmp.birth_enr = self.birth_enr
         tmp.speed = self.speed
         tmp.weight = self.weight
+        tmp.parent_name = self.name
+        self.child_name = tmp.name
+
+    def dead(self):
+        self.color2 = (150, 150, 150)
+        pg.draw.ellipse(self.sens_circ.image,
+                        self.color2,
+                        self.sens_circ.image.get_rect())
+        self.sens_circ.image.blit(self.brd_info, (18, 12 + 3 * HCR))
 
     def just_walk(self, start_w):
         for i in range(self.speed):
