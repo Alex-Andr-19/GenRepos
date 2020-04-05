@@ -4,8 +4,10 @@ from math import fabs, cos, sin, pi, ceil
 from lib_func import clamp
 from settings import *
 
+
 class Creature:
-    def __init__(self, w, h, sens=70, start_cords=(0, 0), breed=1, color1=(0, 0, 255), color2=(87, 87, 87), fon_c=(0, 0, 0)):
+    def __init__(self, w, h, sens=70, start_cords=(0, 0), breed=1, color1=(0, 0, 255), color2=(87, 87, 87),
+                 fon_c=(0, 0, 0)):
         self.w = w
         self.h = h
         self.sens = sens
@@ -29,10 +31,10 @@ class Creature:
         self.body.image.fill(color1)
 
         self.sens_circ = pg.sprite.Sprite()
-        self.sens_circ.image = pg.Surface([sens*2, sens*2])
+        self.sens_circ.image = pg.Surface([sens * 2, sens * 2])
         self.sens_circ.rect = self.sens_circ.image.get_rect()
-        self.sens_circ.rect.x = self.body.rect.x - sens + ceil(w/2)
-        self.sens_circ.rect.y = self.body.rect.y - sens + ceil(h/2)
+        self.sens_circ.rect.x = self.body.rect.x - sens + ceil(w / 2)
+        self.sens_circ.rect.y = self.body.rect.y - sens + ceil(h / 2)
         self.sens_circ.image.fill(fon_c)
         self.sens_circ.image.set_colorkey(fon_c)
 
@@ -63,47 +65,26 @@ class Creature:
     def type(self):
         return "Creature"
 
-    def go_to_targer(self, targ):
-        if targ.type() == "Food":
-            x_t = targ.rect.x
-            y_t = targ.rect.y
+    def go_to_target(self, targ):
+        x_t = targ.rect.x
+        y_t = targ.rect.y
 
-            for i in range(self.speed):
-                if fabs(self.body.rect.x - x_t) > fabs(self.body.rect.y - y_t):
-                    if self.body.rect.x > x_t:
-                        self.body.rect.x -= 1
-                        self.sens_circ.rect.x -= 1
-                    else:
-                        self.body.rect.x += 1
-                        self.sens_circ.rect.x += 1
+        for i in range(self.speed):
+            if fabs(self.body.rect.x - x_t) > fabs(self.body.rect.y - y_t):
+                if self.body.rect.x > x_t:
+                    self.body.rect.x -= 1
+                    self.sens_circ.rect.x -= 1
                 else:
-                    if self.body.rect.y > y_t:
-                        self.body.rect.y -= 1
-                        self.sens_circ.rect.y -= 1
-                    else:
-                        self.body.rect.y += 1
-                        self.sens_circ.rect.y += 1
-                self.energy = clamp(self.energy - 0.006 * self.weight / 64, 10)
-        else:
-            x_t = targ.body.rect.x
-            y_t = targ.body.rect.y
-
-            for i in range(self.speed):
-                if fabs(self.body.rect.x - x_t) > fabs(self.body.rect.y - y_t):
-                    if self.body.rect.x > x_t:
-                        self.body.rect.x -= 1
-                        self.sens_circ.rect.x -= 1
-                    else:
-                        self.body.rect.x += 1
-                        self.sens_circ.rect.x += 1
+                    self.body.rect.x += 1
+                    self.sens_circ.rect.x += 1
+            else:
+                if self.body.rect.y > y_t:
+                    self.body.rect.y -= 1
+                    self.sens_circ.rect.y -= 1
                 else:
-                    if self.body.rect.y > y_t:
-                        self.body.rect.y -= 1
-                        self.sens_circ.rect.y -= 1
-                    else:
-                        self.body.rect.y += 1
-                        self.sens_circ.rect.y += 1
-                self.energy = clamp(self.energy - 0.006 * self.weight / 64, 10)
+                    self.body.rect.y += 1
+                    self.sens_circ.rect.y += 1
+            self.energy = clamp(self.energy - 0.006 * self.weight / 64)
 
         r = clamp(int(self.color1[0] * self.energy))
         if self.energy > 5.5:

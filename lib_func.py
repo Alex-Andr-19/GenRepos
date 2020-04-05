@@ -38,10 +38,15 @@ def fn_nrst_trg(crt, crt_mas, fd_mas, crt_gr, dead_gr, fd_gr, without=[]):
                 index = i
 
     for i in range(len(crt_mas)):
+        fam = crt.child_name == crt_mas[i].name or crt.parent_name == crt_mas[i].name
         if min_dis > distance_s(crt.body, crt_mas[i].body) and crt_mas[i].body in dead_gr:
             min_dis = distance_s(crt.body, crt_mas[i].body)
             index = i + len(fd_mas)
-
+        if min_dis > distance_s(crt.body, crt_mas[i].body) and \
+                crt_mas[i].weight < crt.weight and \
+                crt_mas[i].energy and not fam:
+            min_dis = distance_s(crt.body, crt_mas[i].body)
+            index = i + len(fd_mas)
     return index
 
 def circ_on(crt, start_w=0, clock=1):
