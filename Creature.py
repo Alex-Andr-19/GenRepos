@@ -8,6 +8,7 @@ from settings import *
 class Creature:
     def __init__(self, w, h, sens=70, start_cords=(0, 0), breed=1, color1=(0, 0, 255), color2=(87, 87, 87),
                  fon_c=(0, 0, 0)):
+        # внешние характеристики
         self.w = w
         self.h = h
         self.sens = sens
@@ -17,6 +18,16 @@ class Creature:
         self.breed = breed
         self.days = 1
 
+        # внутренние характеристики
+        self.energy = 2.5
+        self.speed = 1
+        self.birth_enr = 5
+        self.weight = self.w * self.h
+        self.name = rand(1, 1000001)
+        self.parent_name = 0
+        self.child_name = 0
+
+        # отрисовка особи
         self.terretory = pg.sprite.Group()
 
         self.body = pg.sprite.Sprite()
@@ -33,8 +44,8 @@ class Creature:
         self.sens_circ = pg.sprite.Sprite()
         self.sens_circ.image = pg.Surface([sens * 2, sens * 2])
         self.sens_circ.rect = self.sens_circ.image.get_rect()
-        self.sens_circ.rect.x = self.body.rect.x - sens + ceil(w / 2)
-        self.sens_circ.rect.y = self.body.rect.y - sens + ceil(h / 2)
+        self.sens_circ.rect.x = self.body.rect.x - sens + int(w / 2) - 1
+        self.sens_circ.rect.y = self.body.rect.y - sens + int(h / 2) - 1
         self.sens_circ.image.fill(fon_c)
         self.sens_circ.image.set_colorkey(fon_c)
 
@@ -45,18 +56,11 @@ class Creature:
                         self.color2,
                         self.sens_circ.image.get_rect())
 
-        self.energy = 2.5
-        self.speed = 1
-        self.birth_enr = 5
-        self.weight = self.w * self.h
-        self.name = rand(1, 1000001)
-        self.parent_name = 0
-        self.child_name = 0
-
         self.f = pg.font.Font(None, 15)
         self.brd_info = self.f.render(str(self.breed), 0, (255, 255, 255))
         self.sens_circ.image.blit(self.brd_info, (18, 12))
 
+        # дополнительная информация
         self.enrg_info = self.f.render(str(self.energy), 0, (255, 255, 255))
         # self.days_info = self.f.render(str(self.breed), 0, (255, 255, 255))
         # self.speed_info = self.f.render(str(self.speed), 0, (255, 255, 255))
@@ -65,10 +69,13 @@ class Creature:
     def type(self):
         return "Creature"
 
+    # функция возвращает 1, если особь не потратила всю энергию
+    #                    0, иначе
     def go_to_target(self, targ):
         x_t = targ.rect.x
         y_t = targ.rect.y
 
+        # высчитывание новых координат
         for i in range(self.speed):
             if fabs(self.body.rect.x - x_t) > fabs(self.body.rect.y - y_t):
                 if self.body.rect.x > x_t:
@@ -84,8 +91,11 @@ class Creature:
                 else:
                     self.body.rect.y += 1
                     self.sens_circ.rect.y += 1
+
+            # затрата на передвижение
             self.energy = clamp(self.energy - 0.006 * self.weight / 64)
 
+        # расчёт цвета в зависимости от количества энергии
         r = clamp(int(self.color1[0] * self.energy))
         if self.energy > 5.5:
             r = clamp(int((self.energy - 5.5) * 255))
@@ -94,6 +104,7 @@ class Creature:
             g = clamp(int((self.energy - 8.5) * 255))
         b = clamp(int(self.color1[2] * self.energy / 5.5))
 
+        # обновление размеров поверхности при мутации у особи гена размера тела
         if self.body.rect.w != self.w:
             self.body.image = pg.Surface([self.w, self.h])
             self.body.rect.w = self.w
@@ -105,6 +116,7 @@ class Creature:
             # self.body.rect.y -= (self.h - self.body.rect.h) // 2
             self.weight = self.w * self.h
 
+        # отрисовка особи с обновлёнными координатами
         self.sens_circ.image = pg.Surface([self.sens * 2 + self.w - 5, self.sens * 2 + self.h - 5])
         self.sens_circ.image.fill((0, 0, 0))
         self.sens_circ.image.set_colorkey((0, 0, 0))
@@ -115,6 +127,7 @@ class Creature:
 
         self.sens_circ.image.blit(self.brd_info, (18, 12 + 3 * HCR))
 
+        # дополнительная информация
         self.enrg_info = self.f.render(str(self.energy)[:5], 1, (255, 255, 255))
         # self.days_info = self.f.render(str(self.days), 1, (255, 255, 255))
         # self.speed_info = self.f.render(str(self.speed), 1, (255, 255, 255))
@@ -129,6 +142,9 @@ class Creature:
             return 0
         return 1
 
+    # своеобразныйконструктор копирования,
+    # предназначенный для копирования должным образом всех своих характеристик потомку
+    # + обновление своих внутренних характеристик
     def copy_to(self, tmp):
         tmp.color2 = self.color2
         tmp.w = self.w
@@ -150,11 +166,17 @@ class Creature:
                         self.sens_circ.image.get_rect())
         self.sens_circ.image.blit(self.brd_info, (18, 12 + 3 * HCR))
 
-    def just_walk(self, start_w):
+    def expantion(self, sens):
+        self.sens = sens
+        self.sens_circ.rect.x = self.body.rect.x - sens + ceil(self.w / 2) - 1
+        self.sens_circ.rect.y = self.body.rect.y - sens + ceil(self.h / 2) - 1
+
+
+    '''def just_walk(self, start_w):
         for i in range(self.speed):
             self.angle += pi / 90
             self.body.rect.x = self.center[0] + self.sens * cos(self.angle)
             self.body.rect.y = self.center[1] - self.sens * sin(self.angle)
             self.sens_circ.rect.x = self.body.rect.x - self.sens + self.w // 2
-            self.sens_circ.rect.y = self.body.rect.y - self.sens + self.h // 2
+            self.sens_circ.rect.y = self.body.rect.y - self.sens + self.h // 2'''
 

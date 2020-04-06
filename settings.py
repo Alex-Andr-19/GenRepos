@@ -6,7 +6,7 @@ SCR_H = 700
 
 # общие настройки
 COUNT_CRT = 1
-COUNT_FD = int(SCR_W * SCR_H * 0.00121)
+COUNT_FD = int(SCR_W * SCR_H * 0.0008)
 START_TIME = pg.time.get_ticks()
 PAUSE = 0
 

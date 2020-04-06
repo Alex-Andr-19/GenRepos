@@ -1,9 +1,12 @@
-from math import sqrt, sin, asin, cos, pi, fabs
+from math import sqrt
 
+# необходимые математические функции
 def distance_s(a, b):
     return sqrt((a.rect.x - b.rect.x)**2 + (a.rect.y - b.rect.y)**2)
 def distance_c(x1, y1, x2, y2):
     return sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+'''
+# функция вычисления угла от спрайта до точки
 def angle_to(body, cords):
     gip = distance_c(body.rect.x, body.rect.y, cords[0], cords[1])
     kat = fabs(body.rect.y - cords[1])
@@ -14,6 +17,7 @@ def angle_to(body, cords):
     if body.rect.y >= cords[1]:
         a = -a
     return a
+'''
 
 def clamp(a, max=255, min=0):
     if a >= max:
@@ -22,6 +26,11 @@ def clamp(a, max=255, min=0):
         return min
     return a
 
+# функция нахождения ближайшей и важнейшей цели
+# Приоритеты:
+#               1. Живая особь
+#               2. Мёртвая особь
+#               3. Еда
 def fn_nrst_trg(crt, crt_mas, fd_mas, crt_gr, dead_gr, fd_gr, without=[]):
     index = 0
     min_dis = 10000
@@ -43,12 +52,14 @@ def fn_nrst_trg(crt, crt_mas, fd_mas, crt_gr, dead_gr, fd_gr, without=[]):
             min_dis = distance_s(crt.body, crt_mas[i].body)
             index = i + len(fd_mas)
         if min_dis > distance_s(crt.body, crt_mas[i].body) and \
-                crt_mas[i].weight < crt.weight and \
+                crt_mas[i].weight + 10 < crt.weight and \
                 crt_mas[i].energy and not fam:
             min_dis = distance_s(crt.body, crt_mas[i].body)
             index = i + len(fd_mas)
     return index
 
+'''
+# функция вращения по окружности по часовой стрелке на целый круг со стартового угла
 def circ_on(crt, start_w=0, clock=1):
     if clock:
         angle_tmp = crt.angle + pi / 90 + start_w
@@ -63,3 +74,4 @@ def circ_on(crt, start_w=0, clock=1):
 
     if crt.angle >= 2 * pi:
         crt.angle = 0
+'''
