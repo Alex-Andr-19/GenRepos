@@ -18,7 +18,8 @@ Coef = 0.0008
 COUNT_FD = int(SCR_W * SCR_H * Coef)
 START_TIME = pg.time.get_ticks()
 PAUSE = 0
-SPEED = 0.9
+SPEED = 0.8
+SP_GEN_FD = 0.615
 
 # настройки особи
 WCR = HCR = 8

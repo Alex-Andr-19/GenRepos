@@ -32,7 +32,7 @@ curs_gr  = pg.sprite.Group()
 vis_gr   = []
 crt_mas  = [Creature(WCR, HCR, SENS) for i in range(count_crt)]
 fd_mas   = [Food() for i in range(COUNT_FD)]
-curs_mas = [Cursor(10, 160 + 80 * i, [COUNT_FD / 2000, 0.9, 0][i]) for i in range(3)]
+curs_mas = [Cursor(10, 160 + 80 * i, [COUNT_FD / 2000, SPEED, SP_GEN_FD][i]) for i in range(3)]
 
 for i in range(count_crt):
     crtb_gr.add(crt_mas[i].body)
@@ -44,18 +44,20 @@ for i in range(COUNT_FD):
 for i in range(3):
     curs_gr.add(curs_mas[i])
 
-f = pg.font.Font(None, 36)
+f1 = pg.font.Font(None, 36)
+f2 = pg.font.Font(None, 29)
 index = [fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr) for i in range(count_crt)]
 
 # начало программы
 while run:
 
     # вывод информации о ситуации
-    l1 = f.render("Alive      - " + str(alive), 1, (0, 0, 0))
-    l2 = f.render("Food      - " + str(int(len(fd_gr) / COUNT_FD * 100)) + "%", 1, (0, 0, 0))
-    l3 = f.render("Days      - " + str(days), 1, (0, 0, 0))
-    l4 = f.render("Food - " + str(COUNT_FD), 1, (0, 0, 0))
-    l5 = f.render("Speed - " + str(int(curs_mas[1].percent * 100)) + "%", 1, (0, 0, 0))
+    l1 = f1.render("Alive      - " + str(alive), 1, (0, 0, 0))
+    l2 = f1.render("Food      - " + str(int(len(fd_gr) / COUNT_FD * 100)) + "%", 1, (0, 0, 0))
+    l3 = f1.render("Days      - " + str(days), 1, (0, 0, 0))
+    l4 = f1.render("Food - " + str(COUNT_FD), 1, (0, 0, 0))
+    l5 = f1.render("Speed - " + str(int(curs_mas[1].percent * 100)) + "%", 1, (0, 0, 0))
+    l6 = f2.render("Speed gener. food - " + str(int(curs_mas[2].percent * 100)) + "%", 1, (0, 0, 0))
 
     screen.fill((0, 0, 0))
     set_pan.fill((210, 210, 210))
@@ -77,7 +79,7 @@ while run:
                 fd_mas[i].fading()
 
     # появление новой еды
-    if (temp_time - START_TIME) % (COUNT_FD // 5) == 0:
+    if (temp_time - START_TIME) % (int(200 * (1 - SP_GEN_FD)) + 1) == 0:
         for i in range(COUNT_FD):
             if fd_mas[i] not in fd_gr:
                 fd_mas[i].rect.x = rand(WCR, SCR_W - WCR)
@@ -250,13 +252,14 @@ while run:
         elif crt_mas[clamp(index[i] - COUNT_FD, count_crt - 1)].body not in crtb_gr:
             index[i] = fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr,
                                    [index[j] for j in range(count_crt) if j != i])
+
+        # случай, при котором уда, за которой шла особь, удалилась из-за уменьшения её общего количества
         else:
-            # if fd_mas[index[i]] not in fd_gr and index[i] != -1:
             index[i] = fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr,
                                    [index[j] for j in range(count_crt) if j != i])
 
     # генерация нового дня
-    if len(fd_gr) < COUNT_FD // 100 * 5:
+    if len(fd_gr) < COUNT_FD // 100 * 6:
         # генерация нового поля еды
         for i in range(COUNT_FD):
             if fd_mas[i] not in fd_gr:
@@ -303,8 +306,14 @@ while run:
                 while COUNT_FD < len(fd_mas):
                     fd_mas[-1].kill()
                     fd_mas = fd_mas[:-1]
+
+            # скорость
             if i == 1:
                 SPEED = curs_mas[i].percent
+
+            # скорость генерации новой еды
+            if i == 2:
+                SP_GEN_FD = curs_mas[i].percent
 
     # оформление
     pg.draw.line(set_pan, (130, 130, 130), (10, 120), (Set_W - 10, 120))
@@ -316,7 +325,8 @@ while run:
     set_pan.blit(l3, (Set_W * (1 - 170/Set_W) / 2 + 4, 65))
     set_pan.blit(l4, (Set_W * (1 - 140/Set_W) / 2, 135))
     set_pan.blit(l5, (Set_W * (1 - 150/Set_W) / 2, 215))
+    set_pan.blit(l6, (10, 295))
 
-    pg.time.delay(int(100 * (1 - SPEED)))
+    pg.time.delay(int(50 * (1 - SPEED)))
 
     pg.display.update()
