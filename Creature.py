@@ -113,7 +113,7 @@ class Creature:
         if self.body.rect.h != self.h:
             self.body.image = pg.Surface([self.w, self.h])
             self.body.rect.h = self.h
-            # self.body.rect.y -= (self.h - self.body.rect.h) // 2
+            self.body.rect.y -= (self.h - self.body.rect.h) // 2
             self.weight = self.w * self.h
 
         # отрисовка особи с обновлёнными координатами

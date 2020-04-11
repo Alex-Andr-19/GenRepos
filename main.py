@@ -2,6 +2,7 @@ import pygame as pg
 
 from Food import Food
 from Creature import Creature
+from Cursor import Cursor
 
 from random import randint as rand
 from lib_func import *
@@ -15,7 +16,10 @@ iterator  = 0
 
 pg.init()
 
-window = pg.display.set_mode((SCR_W, SCR_H))
+window = pg.display.set_mode((Win_W, Win_H))
+screen = window.subsurface((Set_W, 0, SCR_W, SCR_H))
+set_pan = window.subsurface((0, 0, Set_W, SCR_H))
+
 run = 1
 
 fd_gr    = pg.sprite.Group()
@@ -23,12 +27,12 @@ crtb_gr  = pg.sprite.Group()
 crts_gr  = pg.sprite.Group()
 deadb_gr = pg.sprite.Group()
 deads_gr = pg.sprite.Group()
+curs_gr  = pg.sprite.Group()
 
 vis_gr   = []
 crt_mas  = [Creature(WCR, HCR, SENS) for i in range(count_crt)]
 fd_mas   = [Food() for i in range(COUNT_FD)]
-
-breed_mas = [count_crt]
+curs_mas = [Cursor(10, 160 + 80 * i, [COUNT_FD / 2000, 0.9, 0][i]) for i in range(3)]
 
 for i in range(count_crt):
     crtb_gr.add(crt_mas[i].body)
@@ -37,36 +41,33 @@ for i in range(count_crt):
 for i in range(COUNT_FD):
     fd_gr.add(fd_mas[i])
 
+for i in range(3):
+    curs_gr.add(curs_mas[i])
+
 f = pg.font.Font(None, 36)
 index = [fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr) for i in range(count_crt)]
+
 # начало программы
 while run:
 
     # вывод информации о ситуации
-    l1 = f.render("Creatures - " + str(len(crtb_gr)), 1, (255, 255, 255))
-    l2 = f.render("Alive      - " + str(alive), 1, (255, 255, 255))
-    l3 = f.render("Food      - " + str(len(fd_gr)), 1, (255, 255, 255))
-    l4 = f.render("Days      - " + str(days), 1, (255, 255, 255))
-    while iterator != len(breed_mas) and not breed_mas[iterator]:
-        brd_info = str(iterator + 1) + "^0: "
-        iterator += 1
-    for i in range(iterator, len(breed_mas)):
-        brd_info += str(breed_mas[i])
-        if i != len(breed_mas) - 1:
-            brd_info += ", "
-    iterator = 0
-    l6 = f.render("Breeds      - " + brd_info, 1, (255, 255, 255))
+    l1 = f.render("Alive      - " + str(alive), 1, (0, 0, 0))
+    l2 = f.render("Food      - " + str(int(len(fd_gr) / COUNT_FD * 100)) + "%", 1, (0, 0, 0))
+    l3 = f.render("Days      - " + str(days), 1, (0, 0, 0))
+    l4 = f.render("Food - " + str(COUNT_FD), 1, (0, 0, 0))
+    l5 = f.render("Speed - " + str(int(curs_mas[1].percent * 100)) + "%", 1, (0, 0, 0))
 
-    window.fill((0, 0, 0))
+    screen.fill((0, 0, 0))
+    set_pan.fill((210, 210, 210))
 
     for event in pg.event.get():
         if event.type == pg.QUIT:
             run = 0
 
     # отрисовка всех объектов
-    crts_gr.draw(window)
-    fd_gr.draw(window)
-    crtb_gr.draw(window)
+    crts_gr.draw(screen)
+    fd_gr.draw(screen)
+    crtb_gr.draw(screen)
 
     # затухание еды
     temp_time = pg.time.get_ticks()
@@ -74,6 +75,17 @@ while run:
         for i in range(len(fd_mas)):
             if fd_mas[i].color[0]:
                 fd_mas[i].fading()
+
+    # появление новой еды
+    if (temp_time - START_TIME) % (COUNT_FD // 5) == 0:
+        for i in range(COUNT_FD):
+            if fd_mas[i] not in fd_gr:
+                fd_mas[i].rect.x = rand(WCR, SCR_W - WCR)
+                fd_mas[i].rect.y = rand(HCR, SCR_H - HCR)
+                fd_mas[i].image.fill((0, 255, 0))
+                fd_mas[i].color  = (0, 255, 0)
+                fd_gr.add(fd_mas[i])
+                break
 
     # видит ли особь еду
     prev_len = 0
@@ -117,11 +129,15 @@ while run:
             index[i] = -1
             deadb_gr.add(crt_mas[i].body)
             deads_gr.add(crt_mas[i].sens_circ)
-            breed_mas[crt_mas[i].breed - 1] -= 1
             crt_mas[i].color2 = (60, 60, 60)
 
     # обработка энергии
     for i in range(count_crt):
+        if crt_mas[i].sens_circ.rect.x <= pg.mouse.get_pos()[0] - Set_W <= crt_mas[i].sens_circ.rect.x + crt_mas[i].sens_circ.rect.w and \
+                crt_mas[i].sens_circ.rect.y <= pg.mouse.get_pos()[1] <= crt_mas[i].sens_circ.rect.y + crt_mas[
+            i].sens_circ.rect.h and pg.mouse.get_pressed()[0]:
+            print(i)
+
         hit_gr = pg.sprite.spritecollide(crt_mas[i].body, fd_gr, True)
         # съела ли особь еду
         if len(hit_gr):
@@ -141,8 +157,6 @@ while run:
                 crt_mas[i].energy += 0.5 * crt_mas[index[i] - COUNT_FD].weight / 64
                 crt_mas[index[i] - COUNT_FD].energy = 0
                 index[index[i] - COUNT_FD] = -1
-                if breed_mas[crt_mas[index[i] - COUNT_FD].breed - 1]:
-                    breed_mas[crt_mas[index[i] - COUNT_FD].breed - 1] -= 1
 
             # мёртвую
             hit_gr = pg.sprite.spritecollide(crt_mas[i].body, deadb_gr, True)
@@ -216,12 +230,6 @@ while run:
                 elif 95 <= chance:
                     crt_mas[-1].expantion(clamp(crt_mas[-1].sens - 2, 45, 15))
 
-                # статистика
-                if len(breed_mas) < crt_mas[-1].breed:
-                    breed_mas.append(1)
-                else:
-                    breed_mas[crt_mas[-1].breed - 1] += 1
-
                 # высчитывание цели для дочерней особи
                 index.append(fn_nrst_trg(crt_mas[-1], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr, [index[j] for j in range(count_crt) if j != i]))
 
@@ -240,6 +248,10 @@ while run:
                index[i] = fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr,
                                       [index[j] for j in range(count_crt) if j != i])
         elif crt_mas[clamp(index[i] - COUNT_FD, count_crt - 1)].body not in crtb_gr:
+            index[i] = fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr,
+                                   [index[j] for j in range(count_crt) if j != i])
+        else:
+            # if fd_mas[index[i]] not in fd_gr and index[i] != -1:
             index[i] = fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr,
                                    [index[j] for j in range(count_crt) if j != i])
 
@@ -272,12 +284,39 @@ while run:
     vis_gr   = []
     alive = count_crt - index.count(-1)
 
-    window.blit(l1, (20, 15))
-    window.blit(l2, (40, 40))
-    window.blit(l3, (41, 65))
-    window.blit(l4, (44, 86))
-    window.blit(l6, (20, 110))
+    # изменение настроек
+    for i in range(3):
+        if curs_mas[i].rect.x <= pg.mouse.get_pos()[0] <= curs_mas[i].rect.x + curs_mas[i].rect.w and \
+                curs_mas[i].rect.y <= pg.mouse.get_pos()[1] <= curs_mas[i].rect.y + curs_mas[i].rect.h and \
+                    pg.mouse.get_pressed()[0]:
+            curs_mas[i].redraw(pg.mouse.get_pos())
+            # количество еды
+            if i == 0:
+                COUNT_FD = int(2000 * curs_mas[i].percent)
+                while COUNT_FD > len(fd_mas):
+                    fd_mas.append(Food())
+                    fd_mas[-1].rect.x = rand(WCR, SCR_W - WCR)
+                    fd_mas[-1].rect.y = rand(HCR, SCR_H - HCR)
+                    fd_mas[-1].image.fill((0, 255, 0))
+                    fd_mas[-1].color = (0, 255, 0)
+                    fd_gr.add(fd_mas[-1])
+                while COUNT_FD < len(fd_mas):
+                    fd_mas[-1].kill()
+                    fd_mas = fd_mas[:-1]
+            if i == 1:
+                SPEED = curs_mas[i].percent
 
-    pg.time.delay(10)
+    # оформление
+    pg.draw.line(set_pan, (130, 130, 130), (10, 120), (Set_W - 10, 120))
+    curs_gr.draw(set_pan)
+    pg.draw.line(set_pan, (130, 130, 130), (10, 380), (Set_W - 10, 380))
+
+    set_pan.blit(l1, (Set_W * (1 - 170/Set_W) / 2, 15))
+    set_pan.blit(l2, (Set_W * (1 - 170/Set_W) / 2 + 1, 40))
+    set_pan.blit(l3, (Set_W * (1 - 170/Set_W) / 2 + 4, 65))
+    set_pan.blit(l4, (Set_W * (1 - 140/Set_W) / 2, 135))
+    set_pan.blit(l5, (Set_W * (1 - 150/Set_W) / 2, 215))
+
+    pg.time.delay(int(100 * (1 - SPEED)))
 
     pg.display.update()
