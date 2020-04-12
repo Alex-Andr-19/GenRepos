@@ -3,6 +3,7 @@ import pygame as pg
 from Food import Food
 from Creature import Creature
 from Cursor import Cursor
+from DNA import DNA
 
 from random import randint as rand
 from lib_func import *
@@ -47,6 +48,8 @@ for i in range(3):
 f1 = pg.font.Font(None, 36)
 f2 = pg.font.Font(None, 29)
 index = [fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr) for i in range(count_crt)]
+
+dna = DNA(15, 70, 430)
 
 # начало программы
 while run:
@@ -319,6 +322,11 @@ while run:
     pg.draw.line(set_pan, (130, 130, 130), (10, 120), (Set_W - 10, 120))
     curs_gr.draw(set_pan)
     pg.draw.line(set_pan, (130, 130, 130), (10, 380), (Set_W - 10, 380))
+    pg.draw.rect(set_pan, (0, 0, 0), (25, 405, 190, 265))
+    for i in range(2):
+        dna.turning()
+        dna.draw(set_pan)
+
 
     set_pan.blit(l1, (Set_W * (1 - 170/Set_W) / 2, 15))
     set_pan.blit(l2, (Set_W * (1 - 170/Set_W) / 2 + 1, 40))
