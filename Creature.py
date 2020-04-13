@@ -11,16 +11,17 @@ class Creature:
         # внешние характеристики
         self.w = w
         self.h = h
-        self.sens = sens
         self.color1 = color1
         self.color2 = color2
         self.fon_c = fon_c
         self.breed = breed
         self.days = 1
+        self.focus = 0
 
         # внутренние характеристики
         self.energy = 2.5
         self.speed = 1
+        self.sens = sens
         self.birth_enr = 5
         self.weight = self.w * self.h
         self.name = rand(1, 1000001)
@@ -123,6 +124,13 @@ class Creature:
         pg.draw.ellipse(self.sens_circ.image,
                         self.color2,
                         self.sens_circ.image.get_rect())
+        if self.focus:
+            pg.draw.rect(self.sens_circ.image,
+                         (255, 215, 0),
+                         (self.sens - self.body.rect.w // 2,
+                          self.sens - self.body.rect.h // 2,
+                          self.body.rect.w + 2,
+                          self.body.rect.h + 2))
         self.body.image.fill((r, g, b))
 
         self.sens_circ.image.blit(self.brd_info, (18, 12 + 3 * HCR))
@@ -171,6 +179,8 @@ class Creature:
         self.sens_circ.rect.x = self.body.rect.x - sens + ceil(self.w / 2) - 1
         self.sens_circ.rect.y = self.body.rect.y - sens + ceil(self.h / 2) - 1
 
+    def type(self):
+        return "Creature"
 
     '''def just_walk(self, start_w):
         for i in range(self.speed):
