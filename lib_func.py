@@ -26,6 +26,14 @@ def clamp(a, max=255, min=0):
         return min
     return a
 
+def cycle(a, max, min):
+    res = a
+    if a > max:
+        res = min
+    elif a < min:
+        res = max
+    return res
+
 # функция нахождения ближайшей и важнейшей цели
 # Приоритеты:
 #               1. Живая особь

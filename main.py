@@ -14,7 +14,8 @@ alive     = count_crt
 days      = 1
 brd_info  = ""
 iterator  = 0
-focus = 0
+focus = -1
+redraw_dna = 0
 
 pg.init()
 
@@ -51,6 +52,7 @@ f2 = pg.font.Font(None, 29)
 index = [fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr) for i in range(count_crt)]
 
 dna = DNA(15, 70, 430)
+time_of_press = pg.time.get_ticks()
 
 # начало программы
 while run:
@@ -74,6 +76,18 @@ while run:
     crts_gr.draw(screen)
     fd_gr.draw(screen)
     crtb_gr.draw(screen)
+
+    # "обнуление" фокуса
+    if pg.mouse.get_pressed()[0] and not focus >= count_crt:
+        focus = -1
+
+    # снятие фокуса с особей
+    if not 0 <= focus < count_crt:
+        if redraw_dna:
+            dna.normal()
+            redraw_dna = 0
+        for j in range(count_crt):
+            crt_mas[j].focus = 0
 
     # затухание еды
     temp_time = pg.time.get_ticks()
@@ -136,6 +150,8 @@ while run:
             deadb_gr.add(crt_mas[i].body)
             deads_gr.add(crt_mas[i].sens_circ)
             crt_mas[i].color2 = (60, 60, 60)
+            if focus == i:
+                focus = -1
 
     # обработка энергии
     for i in range(count_crt):
@@ -149,6 +165,7 @@ while run:
             crt_mas[i].focus = 1
             dna.normal()
             dna.redraw(crt_mas[i])
+            redraw_dna = 1
 
         hit_gr = pg.sprite.spritecollide(crt_mas[i].body, fd_gr, True)
         # съела ли особь еду
@@ -182,6 +199,8 @@ while run:
 
         # рождение
         if crt_mas[i].energy > 9.8:
+            if focus >= count_crt:
+                focus += 1
             for j in range(int(9.8 // crt_mas[i].birth_enr)):
                 # вычисление координат дочерней особи
                 cords = (crt_mas[i].body.rect.x + WCR, crt_mas[i].body.rect.y + HCR)
@@ -287,7 +306,16 @@ while run:
 
         # очистка "памяти" от съеденных особей
         index     = [index[i] for i in range(count_crt) if crt_mas[i].body in crtb_gr]
-        crt_mas   = [crt_mas[i] for i in range(count_crt) if crt_mas[i].body in crtb_gr]
+        # crt_mas   = [crt_mas[i] for i in range(count_crt) if crt_mas[i].body in crtb_gr]
+        tmp = []
+        for i in range(count_crt):
+            if crt_mas[i].body in crtb_gr:
+                tmp.append(crt_mas[i])
+            # коррекция фокуса
+            elif i < focus or focus > len(crtb_gr):
+                focus -= 1
+
+        crt_mas = tmp
         count_crt = len(crt_mas)
 
         # обновление дня
@@ -303,6 +331,7 @@ while run:
                 curs_mas[i].rect.y <= pg.mouse.get_pos()[1] <= curs_mas[i].rect.y + curs_mas[i].rect.h and \
                     pg.mouse.get_pressed()[0]:
             curs_mas[i].redraw(pg.mouse.get_pos())
+
             # количество еды
             if i == 0:
                 focus = count_crt
@@ -332,23 +361,26 @@ while run:
         if focus == count_crt:
             curs_mas[0].focus = 1
             curs_mas[1].focus = 0
-            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
             curs_mas[2].focus = 0
+            #
+            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
             curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
 
         elif focus == count_crt + 1:
             curs_mas[0].focus = 0
-            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
             curs_mas[1].focus = 1
             curs_mas[2].focus = 0
+            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
+            #
             curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
 
         elif focus == count_crt + 2:
             curs_mas[0].focus = 0
-            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
             curs_mas[1].focus = 0
-            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
             curs_mas[2].focus = 1
+            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
+            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
+            #
 
         else:
             curs_mas[0].focus = 0
@@ -358,15 +390,104 @@ while run:
             curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
             curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
 
+    # передвижение выбранной особи
+    if 0 <= focus < count_crt:
+        keys = pg.key.get_pressed()
+        if keys[pg.K_RIGHT]:
+            crt_mas[focus].body.rect.x += 2
+            crt_mas[focus].sens_circ.rect.x += 2
+        elif keys[pg.K_UP]:
+            crt_mas[focus].body.rect.y -= 2
+            crt_mas[focus].sens_circ.rect.y -= 2
+        elif keys[pg.K_LEFT]:
+            crt_mas[focus].body.rect.x -= 2
+            crt_mas[focus].sens_circ.rect.x -= 2
+        elif keys[pg.K_DOWN]:
+            crt_mas[focus].body.rect.y += 2
+            crt_mas[focus].sens_circ.rect.y += 2
+
+    # передвижение выбранного курсора
+    elif focus >= 0:
+        keys = pg.key.get_pressed()
+        # отрисовка
+        x = 0
+        if keys[pg.K_RIGHT]:
+            x = clamp(curs_mas[focus - count_crt].percent * (Set_W - 20) + (Set_W - 20) // 200, SCR_W, 20)
+        elif keys[pg.K_LEFT]:
+            x = clamp(curs_mas[focus - count_crt].percent * (Set_W - 20) - (Set_W - 20) // 200, SCR_W, 20)
+        elif keys[pg.K_UP] and pg.time.get_ticks() - time_of_press > 300:
+            # чтобы курсор не проскакивал
+            time_of_press = pg.time.get_ticks()
+            focus = cycle(focus - 1, count_crt + 2, count_crt)
+            x = curs_mas[focus - count_crt].percent * (Set_W - 20)
+        elif keys[pg.K_DOWN] and pg.time.get_ticks() - time_of_press > 300:
+            # -//-
+            time_of_press = pg.time.get_ticks()
+            focus = cycle(focus + 1, count_crt + 2, count_crt)
+            x = curs_mas[focus - count_crt].percent * (Set_W - 20)
+
+        if focus == count_crt:
+            curs_mas[0].focus = 1
+            curs_mas[1].focus = 0
+            curs_mas[2].focus = 0
+            #
+            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
+            curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
+
+        elif focus == count_crt + 1:
+            curs_mas[0].focus = 0
+            curs_mas[1].focus = 1
+            curs_mas[2].focus = 0
+            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
+            #
+            curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
+
+        elif focus == count_crt + 2:
+            curs_mas[0].focus = 0
+            curs_mas[1].focus = 0
+            curs_mas[2].focus = 1
+            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
+            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
+            #
+
+        else:
+            curs_mas[0].focus = 0
+            curs_mas[1].focus = 0
+            curs_mas[2].focus = 0
+            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
+            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
+            curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
+
+        if x:
+            curs_mas[focus - count_crt].redraw((x, 0))
+
+        # изменение настроек
+        if focus == count_crt:
+            COUNT_FD = int(2000 * curs_mas[0].percent)
+            while COUNT_FD > len(fd_mas):
+                fd_mas.append(Food())
+                fd_mas[-1].rect.x = rand(WCR, SCR_W - WCR)
+                fd_mas[-1].rect.y = rand(HCR, SCR_H - HCR)
+                fd_mas[-1].image.fill((0, 255, 0))
+                fd_mas[-1].color = (0, 255, 0)
+                fd_gr.add(fd_mas[-1])
+            while COUNT_FD < len(fd_mas):
+                fd_mas[-1].kill()
+                fd_mas = fd_mas[:-1]
+        elif focus == count_crt + 1:
+            SPEED = curs_mas[1].percent
+        elif focus == count_crt + 2:
+            SP_GEN_FD = curs_mas[2].percent
+
     # оформление
     pg.draw.line(set_pan, (130, 130, 130), (10, 120), (Set_W - 10, 120))
     curs_gr.draw(set_pan)
     pg.draw.line(set_pan, (130, 130, 130), (10, 380), (Set_W - 10, 380))
     pg.draw.rect(set_pan, (0, 0, 0), (25, 405, 190, 265))
+    # ДНК
     for i in range(2):
         dna.turning()
         dna.draw(set_pan)
-
     set_pan.blit(l1, (Set_W * (1 - 170/Set_W) / 2, 15))
     set_pan.blit(l2, (Set_W * (1 - 170/Set_W) / 2 + 1, 40))
     set_pan.blit(l3, (Set_W * (1 - 170/Set_W) / 2 + 4, 65))
