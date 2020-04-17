@@ -13,7 +13,7 @@ SCR_W = Win_W - Set_W
 SCR_H = Win_H
 
 # общие настройки
-COUNT_CRT = 0
+COUNT_CRT = 1
 Coef = 0.0008
 COUNT_FD = int(SCR_W * SCR_H * Coef)
 START_TIME = pg.time.get_ticks()

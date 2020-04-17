@@ -127,10 +127,10 @@ class Creature:
         if self.focus:
             pg.draw.rect(self.sens_circ.image,
                          (255, 215, 0),
-                         (self.sens - self.body.rect.w // 2,
-                          self.sens - self.body.rect.h // 2,
-                          self.body.rect.w + 2,
-                          self.body.rect.h + 2))
+                         (self.body.rect.x - 2 - self.sens_circ.rect.x,
+                          self.body.rect.y - 2 - self.sens_circ.rect.y,
+                          self.body.rect.w + 4,
+                          self.body.rect.h + 4))
         self.body.image.fill((r, g, b))
 
         self.sens_circ.image.blit(self.brd_info, (18, 12 + 3 * HCR))

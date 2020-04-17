@@ -71,6 +71,25 @@ while run:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             run = 0
+        if event.type == pg.KEYUP and 0 <= focus < count_crt:
+            index[focus] = fn_nrst_trg(crt_mas[focus], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr)
+
+    # перемещение курсора с помощью клавиши TAB
+    keys = pg.key.get_pressed()
+    if keys[pg.K_TAB] and pg.time.get_ticks() - time_of_press > 300:
+        # чтобы курсор не проскакивал
+        time_of_press = pg.time.get_ticks()
+        dna.normal()
+        if 0 <= focus < count_crt:
+            crt_mas[focus].focus = 0
+        focus = cycle(focus + 1, count_crt + 2, 0)
+        if 0 <= focus < count_crt:
+            crt_mas[focus].focus = 1
+            dna.redraw(crt_mas[focus])
+        elif focus > 0:
+            redraw_cursors(focus, count_crt, curs_mas)
+            x = curs_mas[focus - count_crt].percent * (Set_W - 20)
+            curs_mas[focus - count_crt].redraw((x, 0))
 
     # отрисовка всех объектов
     crts_gr.draw(screen)
@@ -126,6 +145,23 @@ while run:
     # передвижение каждой особи
     for i in range(count_crt):
         tmp = 1
+
+        # передвижение выбранной особи
+        keys = pg.key.get_pressed()
+        if keys[pg.K_RIGHT] and 0 <= focus < count_crt:
+            crt_mas[focus].body.rect.x += 1
+            crt_mas[focus].sens_circ.rect.x += 1
+        elif keys[pg.K_UP] and 0 <= focus < count_crt:
+            crt_mas[focus].body.rect.y -= 1
+            crt_mas[focus].sens_circ.rect.y -= 1
+        elif keys[pg.K_LEFT] and 0 <= focus < count_crt:
+            crt_mas[focus].body.rect.x -= 1
+            crt_mas[focus].sens_circ.rect.x -= 1
+        elif keys[pg.K_DOWN] and 0 <= focus < count_crt:
+            crt_mas[focus].body.rect.y += 1
+            crt_mas[focus].sens_circ.rect.y += 1
+        elif keys[pg.K_ESCAPE]:
+            focus = -1
 
 # ниже функция clamp используется в качестве костыля, потому что без неё почему-то происходит 'index out of range'
 
@@ -358,56 +394,10 @@ while run:
                 SP_GEN_FD = curs_mas[i].percent
 
         # фокус на курсор
-        if focus == count_crt:
-            curs_mas[0].focus = 1
-            curs_mas[1].focus = 0
-            curs_mas[2].focus = 0
-            #
-            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
-            curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
-
-        elif focus == count_crt + 1:
-            curs_mas[0].focus = 0
-            curs_mas[1].focus = 1
-            curs_mas[2].focus = 0
-            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
-            #
-            curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
-
-        elif focus == count_crt + 2:
-            curs_mas[0].focus = 0
-            curs_mas[1].focus = 0
-            curs_mas[2].focus = 1
-            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
-            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
-            #
-
-        else:
-            curs_mas[0].focus = 0
-            curs_mas[1].focus = 0
-            curs_mas[2].focus = 0
-            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
-            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
-            curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
-
-    # передвижение выбранной особи
-    if 0 <= focus < count_crt:
-        keys = pg.key.get_pressed()
-        if keys[pg.K_RIGHT]:
-            crt_mas[focus].body.rect.x += 2
-            crt_mas[focus].sens_circ.rect.x += 2
-        elif keys[pg.K_UP]:
-            crt_mas[focus].body.rect.y -= 2
-            crt_mas[focus].sens_circ.rect.y -= 2
-        elif keys[pg.K_LEFT]:
-            crt_mas[focus].body.rect.x -= 2
-            crt_mas[focus].sens_circ.rect.x -= 2
-        elif keys[pg.K_DOWN]:
-            crt_mas[focus].body.rect.y += 2
-            crt_mas[focus].sens_circ.rect.y += 2
+        redraw_cursors(focus, count_crt, curs_mas)
 
     # передвижение выбранного курсора
-    elif focus >= 0:
+    if focus >= count_crt:
         keys = pg.key.get_pressed()
         # отрисовка
         x = 0
@@ -425,38 +415,10 @@ while run:
             time_of_press = pg.time.get_ticks()
             focus = cycle(focus + 1, count_crt + 2, count_crt)
             x = curs_mas[focus - count_crt].percent * (Set_W - 20)
+        elif keys[pg.K_ESCAPE]:
+            focus = -1
 
-        if focus == count_crt:
-            curs_mas[0].focus = 1
-            curs_mas[1].focus = 0
-            curs_mas[2].focus = 0
-            #
-            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
-            curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
-
-        elif focus == count_crt + 1:
-            curs_mas[0].focus = 0
-            curs_mas[1].focus = 1
-            curs_mas[2].focus = 0
-            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
-            #
-            curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
-
-        elif focus == count_crt + 2:
-            curs_mas[0].focus = 0
-            curs_mas[1].focus = 0
-            curs_mas[2].focus = 1
-            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
-            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
-            #
-
-        else:
-            curs_mas[0].focus = 0
-            curs_mas[1].focus = 0
-            curs_mas[2].focus = 0
-            curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
-            curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
-            curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
+        redraw_cursors(focus, count_crt, curs_mas)
 
         if x:
             curs_mas[focus - count_crt].redraw((x, 0))

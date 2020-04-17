@@ -1,4 +1,5 @@
 from math import sqrt
+from settings import Set_W
 
 # необходимые математические функции
 def distance_s(a, b):
@@ -65,6 +66,39 @@ def fn_nrst_trg(crt, crt_mas, fd_mas, crt_gr, dead_gr, fd_gr, without=[]):
             min_dis = distance_s(crt.body, crt_mas[i].body)
             index = i + len(fd_mas)
     return index
+
+def redraw_cursors(focus, count_crt, curs_mas):
+    if focus == count_crt:
+        curs_mas[0].focus = 1
+        curs_mas[1].focus = 0
+        curs_mas[2].focus = 0
+        #
+        curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
+        curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
+
+    elif focus == count_crt + 1:
+        curs_mas[0].focus = 0
+        curs_mas[1].focus = 1
+        curs_mas[2].focus = 0
+        curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
+        #
+        curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
+
+    elif focus == count_crt + 2:
+        curs_mas[0].focus = 0
+        curs_mas[1].focus = 0
+        curs_mas[2].focus = 1
+        curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
+        curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
+        #
+
+    else:
+        curs_mas[0].focus = 0
+        curs_mas[1].focus = 0
+        curs_mas[2].focus = 0
+        curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
+        curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
+        curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
 
 '''
 # функция вращения по окружности по часовой стрелке на целый круг со стартового угла
