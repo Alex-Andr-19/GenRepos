@@ -1,10 +1,13 @@
 import pygame as pg
 
+import Statistics
+
 from Food import Food
 from Creature import Creature
 from Cursor import Cursor
 from DNA import DNA
 from Button import Button
+from SubWindow import subwindow
 
 from random import randint as rand
 from lib_func import *
@@ -23,7 +26,10 @@ pg.init()
 window = pg.display.set_mode((Win_W, Win_H))
 screen = window.subsurface((Set_W, 0, SCR_W, SCR_H))
 set_pan = window.subsurface((0, 0, Set_W, SCR_H))
-btn_mas = [Button(186, 2, "img/pause.png"), Button(218, 2, "img/reset.png")]
+btn_mas = [Button(186, 2, "img/pause.png"), Button(218, 2, "img/reset.png"), Button(2, 5, " Statistic", 93, 22)]
+
+statistics = subwindow(95, 27, 900, 510)
+visible = 0
 
 run = 1
 
@@ -102,6 +108,7 @@ while run:
     fd_gr.draw(screen)
     crtb_gr.draw(screen)
     btn_gr.draw(set_pan)
+
 
     # "обнуление" фокуса
     if pg.mouse.get_pressed()[0] and not focus >= count_crt:
@@ -391,6 +398,8 @@ while run:
 
                 # Ресет
                 if i == 1:
+                    count_crt = COUNT_CRT
+
                     fd_gr = pg.sprite.Group()
                     crtb_gr = pg.sprite.Group()
                     crts_gr = pg.sprite.Group()
@@ -398,19 +407,35 @@ while run:
                     deads_gr = pg.sprite.Group()
 
                     vis_gr = []
-                    crt_mas = [Creature(WCR, HCR, SENS) for j in range(COUNT_CRT)]
+                    crt_mas = [Creature(WCR, HCR, SENS) for j in range(count_crt)]
                     fd_mas = [Food() for j in range(COUNT_FD)]
 
-                    for j in range(COUNT_CRT):
+                    for j in range(count_crt):
                         crtb_gr.add(crt_mas[j].body)
                         crts_gr.add(crt_mas[j].sens_circ)
                     for j in range(COUNT_FD):
                         fd_gr.add(fd_mas[j])
 
-            btn_mas[i].focus()
-        else:
-            btn_mas[i].unfocus()
+                    index = [fn_nrst_trg(crt_mas[j], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr) for j in
+                             range(count_crt)]
+                    days = 1
 
+                # Статистика
+                if i == 2:
+                    if visible:
+                        visible = 0
+                        btn_mas[0].redraw("img/pause.png")
+                        btn_mas[i].active = 0
+                        PAUSE = 0
+                    else:
+                        visible = 1
+                        btn_mas[0].redraw("img/play.png")
+                        btn_mas[i].active = 1
+                        PAUSE = 1
+
+            btn_mas[i].focus()
+        elif i != 2 or not btn_mas[i].active:
+            btn_mas[i].unfocus()
 
     # изменение настроек
     for i in range(3):
@@ -491,6 +516,7 @@ while run:
             SP_GEN_FD = curs_mas[2].percent
 
     # оформление
+    pg.draw.line(set_pan, (130, 130, 130), (0, 34), (Set_W, 34))
     pg.draw.line(set_pan, (130, 130, 130), (10, 120), (Set_W - 10, 120))
     curs_gr.draw(set_pan)
     pg.draw.line(set_pan, (130, 130, 130), (10, 380), (Set_W - 10, 380))
@@ -499,13 +525,15 @@ while run:
     for i in range(2):
         dna.turning()
         dna.draw(set_pan)
-    set_pan.blit(l1, (Set_W * (1 - 170/Set_W) / 2, 35))
-    set_pan.blit(l2, (Set_W * (1 - 170/Set_W) / 2 + 1, 60))
-    set_pan.blit(l3, (Set_W * (1 - 170/Set_W) / 2 + 4, 85))
+    set_pan.blit(l1, (Set_W * (1 - 170/Set_W) / 2, 42))
+    set_pan.blit(l2, (Set_W * (1 - 170/Set_W) / 2 + 1, 65))
+    set_pan.blit(l3, (Set_W * (1 - 170/Set_W) / 2 + 4, 92))
     set_pan.blit(l4, (Set_W * (1 - 140/Set_W) / 2, 135))
     set_pan.blit(l5, (Set_W * (1 - 150/Set_W) / 2, 215))
     set_pan.blit(l6, (10, 295))
 
+    if visible:
+        statistics.draw(window)
     pg.time.delay(int(50 * (1 - SPEED)))
 
     pg.display.update()
