@@ -4,6 +4,7 @@ from Food import Food
 from Creature import Creature
 from Cursor import Cursor
 from DNA import DNA
+from Button import Button
 
 from random import randint as rand
 from lib_func import *
@@ -22,15 +23,17 @@ pg.init()
 window = pg.display.set_mode((Win_W, Win_H))
 screen = window.subsurface((Set_W, 0, SCR_W, SCR_H))
 set_pan = window.subsurface((0, 0, Set_W, SCR_H))
+btn_mas = [Button(186, 2, "img/pause.png"), Button(218, 2, "img/reset.png")]
 
 run = 1
 
-fd_gr    = pg.sprite.Group()
-crtb_gr  = pg.sprite.Group()
-crts_gr  = pg.sprite.Group()
+fd_gr = pg.sprite.Group()
+crtb_gr = pg.sprite.Group()
+crts_gr = pg.sprite.Group()
 deadb_gr = pg.sprite.Group()
 deads_gr = pg.sprite.Group()
-curs_gr  = pg.sprite.Group()
+curs_gr = pg.sprite.Group()
+btn_gr = pg.sprite.Group()
 
 vis_gr   = []
 crt_mas  = [Creature(WCR, HCR, SENS) for i in range(count_crt)]
@@ -46,6 +49,9 @@ for i in range(COUNT_FD):
 
 for i in range(3):
     curs_gr.add(curs_mas[i])
+
+for i in range(len(btn_mas)):
+    btn_gr.add(btn_mas[i])
 
 f1 = pg.font.Font(None, 36)
 f2 = pg.font.Font(None, 29)
@@ -95,6 +101,7 @@ while run:
     crts_gr.draw(screen)
     fd_gr.draw(screen)
     crtb_gr.draw(screen)
+    btn_gr.draw(set_pan)
 
     # "обнуление" фокуса
     if pg.mouse.get_pressed()[0] and not focus >= count_crt:
@@ -116,7 +123,7 @@ while run:
                 fd_mas[i].fading()
 
     # появление новой еды
-    if (temp_time - START_TIME) % (int(200 * (1 - SP_GEN_FD)) + 1) == 0:
+    if (temp_time - START_TIME) % (int(200 * (1 - SP_GEN_FD)) + 1) == 0 and not PAUSE:
         for i in range(COUNT_FD):
             if fd_mas[i] not in fd_gr:
                 fd_mas[i].rect.x = rand(WCR, SCR_W - WCR)
@@ -165,14 +172,14 @@ while run:
 
 # ниже функция clamp используется в качестве костыля, потому что без неё почему-то происходит 'index out of range'
 
-        if 0 <= index[i] < COUNT_FD:
+        if 0 <= index[i] < COUNT_FD and not PAUSE:
             # к еде
             if (crt_mas[i].body.rect.x != fd_mas[index[i]].rect.x or
                 crt_mas[i].body.rect.y != fd_mas[index[i]].rect.y) and \
                 index[i] != -1:
 
                 tmp = crt_mas[i].go_to_target(fd_mas[index[i]])
-        elif 0 <= index[i]:
+        elif 0 <= index[i] and not PAUSE:
             # к особи
             if (crt_mas[i].body.rect.x != crt_mas[clamp(index[i] - COUNT_FD, count_crt - 1)].body.rect.x or
                 crt_mas[i].body.rect.y != crt_mas[clamp(index[i] - COUNT_FD, count_crt - 1)].body.rect.y) and \
@@ -361,11 +368,53 @@ while run:
     vis_gr   = []
     alive = count_crt - index.count(-1)
 
+    # обработка кнопок
+    for i in range(len(btn_mas)):
+        # Наведён ли курсор на кнопку
+        if exist_in(pg.mouse.get_pos(), btn_mas[i].rect):
+            # Нажата ли кнопка
+            if pg.mouse.get_pressed()[0] and pg.time.get_ticks() - time_of_press > 200:
+                time_of_press = pg.time.get_ticks()
+                if i == 0 and btn_mas[i].active:
+                    btn_mas[i].up()
+                else:
+                    btn_mas[i].down()
+
+                # Пвуза
+                if i == 0:
+                    if btn_mas[i].active:
+                        btn_mas[i].redraw("img/play.png")
+                        PAUSE = 1
+                    else:
+                        btn_mas[i].redraw("img/pause.png")
+                        PAUSE = 0
+
+                # Ресет
+                if i == 1:
+                    fd_gr = pg.sprite.Group()
+                    crtb_gr = pg.sprite.Group()
+                    crts_gr = pg.sprite.Group()
+                    deadb_gr = pg.sprite.Group()
+                    deads_gr = pg.sprite.Group()
+
+                    vis_gr = []
+                    crt_mas = [Creature(WCR, HCR, SENS) for j in range(COUNT_CRT)]
+                    fd_mas = [Food() for j in range(COUNT_FD)]
+
+                    for j in range(COUNT_CRT):
+                        crtb_gr.add(crt_mas[j].body)
+                        crts_gr.add(crt_mas[j].sens_circ)
+                    for j in range(COUNT_FD):
+                        fd_gr.add(fd_mas[j])
+
+            btn_mas[i].focus()
+        else:
+            btn_mas[i].unfocus()
+
+
     # изменение настроек
     for i in range(3):
-        if curs_mas[i].rect.x <= pg.mouse.get_pos()[0] <= curs_mas[i].rect.x + curs_mas[i].rect.w and \
-                curs_mas[i].rect.y <= pg.mouse.get_pos()[1] <= curs_mas[i].rect.y + curs_mas[i].rect.h and \
-                    pg.mouse.get_pressed()[0]:
+        if exist_in(pg.mouse.get_pos(), curs_mas[i].rect) and pg.mouse.get_pressed()[0]:
             curs_mas[i].redraw(pg.mouse.get_pos())
 
             # количество еды
@@ -450,9 +499,9 @@ while run:
     for i in range(2):
         dna.turning()
         dna.draw(set_pan)
-    set_pan.blit(l1, (Set_W * (1 - 170/Set_W) / 2, 15))
-    set_pan.blit(l2, (Set_W * (1 - 170/Set_W) / 2 + 1, 40))
-    set_pan.blit(l3, (Set_W * (1 - 170/Set_W) / 2 + 4, 65))
+    set_pan.blit(l1, (Set_W * (1 - 170/Set_W) / 2, 35))
+    set_pan.blit(l2, (Set_W * (1 - 170/Set_W) / 2 + 1, 60))
+    set_pan.blit(l3, (Set_W * (1 - 170/Set_W) / 2 + 4, 85))
     set_pan.blit(l4, (Set_W * (1 - 140/Set_W) / 2, 135))
     set_pan.blit(l5, (Set_W * (1 - 150/Set_W) / 2, 215))
     set_pan.blit(l6, (10, 295))

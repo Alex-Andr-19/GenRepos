@@ -35,6 +35,11 @@ def cycle(a, max, min):
         res = max
     return res
 
+def exist_in(pos, rect):
+    if rect.x <= pos[0] <= rect.x + rect.w and rect.y <= pos[1] <= rect.y + rect.h:
+        return True
+    return False
+
 # функция нахождения ближайшей и важнейшей цели
 # Приоритеты:
 #               1. Живая особь
