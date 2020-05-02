@@ -1,5 +1,6 @@
 from math import sqrt
 from settings import Set_W
+import pygame as pg
 
 # необходимые математические функции
 def distance_s(a, b):
@@ -39,6 +40,16 @@ def exist_in(pos, rect):
     if rect.x <= pos[0] <= rect.x + rect.w and rect.y <= pos[1] <= rect.y + rect.h:
         return True
     return False
+
+def create_sprite(x, y, w, h, color=(0, 0, 0)):
+    sprite = pg.sprite.Sprite()
+    sprite.image = pg.Surface((w, h))
+    sprite.image.fill(color)
+    sprite.rect = sprite.image.get_rect()
+    sprite.rect.x = x
+    sprite.rect.y = y
+
+    return sprite
 
 # функция нахождения ближайшей и важнейшей цели
 # Приоритеты:

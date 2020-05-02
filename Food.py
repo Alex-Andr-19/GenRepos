@@ -1,6 +1,6 @@
 import pygame as pg
 from random import randint as rand
-from lib_func import clamp
+from lib_func import clamp, create_sprite
 from settings import *
 
 class Food(pg.sprite.Sprite):

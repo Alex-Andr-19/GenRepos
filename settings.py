@@ -13,6 +13,9 @@ SCR_W = Win_W - Set_W
 SCR_H = Win_H
 
 # общие настройки
+pg.init()
+F1 = pg.font.Font(None, 36)
+F2 = pg.font.Font(None, 29)
 COUNT_CRT = 5
 Coef = 0.0008
 COUNT_FD = int(SCR_W * SCR_H * Coef)

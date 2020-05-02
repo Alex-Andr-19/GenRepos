@@ -1,7 +1,7 @@
 import pygame as pg
 from math import cos, sin, acos, pi, fabs, ceil
 from random import randint as rand
-from lib_func import clamp
+from lib_func import clamp, create_sprite
 
 class Gen(pg.sprite.Group):
     def __init__(self, x, y, length, diam=50, side=1):
@@ -18,21 +18,9 @@ class Gen(pg.sprite.Group):
         self.color2 = (length / diam * 200, length / diam * 200, length / diam * 200)
         self.color3 = (0, 192 - 63 * sin(self.angle), 0)
 
-        self.gen1 = pg.sprite.Sprite()
-        self.gen2 = pg.sprite.Sprite()
-        self.link = pg.sprite.Sprite()
-
-        self.gen1.image = pg.Surface([10, 10])
-        self.link.image = pg.Surface([length, 4])
-        self.gen2.image = pg.Surface([10, 10])
-
-        self.gen1.image.fill(self.color1)
-        self.link.image.fill(self.color2)
-        self.gen2.image.fill(self.color3)
-
-        self.gen1.rect = self.gen1.image.get_rect()
-        self.link.rect = self.link.image.get_rect()
-        self.gen2.rect = self.gen1.image.get_rect()
+        self.gen1 = create_sprite(0, y, 10, 10, self.color1)
+        self.link = create_sprite(x + 10, y + 3, length, 4, self.color2)
+        self.gen2 = create_sprite(0, y, 10, 10, self.color3)
 
         if side == 1:
             self.gen1.rect.x = x
@@ -40,8 +28,6 @@ class Gen(pg.sprite.Group):
         else:
             self.gen1.rect.x = x + 10 + length
             self.gen2.rect.x = x
-        self.gen1.rect.y = y
-        self.gen2.rect.y = y
         self.link.rect.x = x + 10
         self.link.rect.y = y + 3
 
@@ -60,8 +46,13 @@ class Gen(pg.sprite.Group):
         self.x += (self.length - fabs(self.diam * cos(self.angle))) / 2
         self.length = fabs(self.diam * cos(self.angle))
         self.color1 = (192 + 63 * sin(self.angle), 0, self.color1[2])
-        self.color2 = (self.length / self.diam * 200, self.length / self.diam * 200, self.length / self.diam * 200)
+        c = self.length / self.diam * 200
+        self.color2 = (c, c, c)
         self.color3 = (0, 192 - 63 * sin(self.angle), self.color3[2])
+
+        '''self.gen1 = create_sprite(0, self.y, 10, 10, self.color1)
+        self.gen2 = create_sprite(0, self.y, 10, 10, self.color3)
+        self.link = create_sprite(self.x + 10, self.y + 3, self.length, 4, self.color2)'''
 
         self.gen1.image = pg.Surface([10, 10])
         self.link.image = pg.Surface([self.length, 4])

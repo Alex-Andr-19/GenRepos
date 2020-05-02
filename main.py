@@ -58,9 +58,9 @@ for i in range(3):
 
 for i in range(len(btn_mas)):
     btn_gr.add(btn_mas[i])
+# for i in range(len(statistics.buttons)):
+    # btn_gr.add(statistics.buttons[i])
 
-f1 = pg.font.Font(None, 36)
-f2 = pg.font.Font(None, 29)
 index = [fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr) for i in range(count_crt)]
 
 dna = DNA(15, 70, 430)
@@ -70,12 +70,12 @@ time_of_press = pg.time.get_ticks()
 while run:
 
     # вывод информации о ситуации
-    l1 = f1.render("Alive      - " + str(alive), 1, (0, 0, 0))
-    l2 = f1.render("Food      - " + str(int(len(fd_gr) / COUNT_FD * 100)) + "%", 1, (0, 0, 0))
-    l3 = f1.render("Days      - " + str(days), 1, (0, 0, 0))
-    l4 = f1.render("Food - " + str(COUNT_FD), 1, (0, 0, 0))
-    l5 = f1.render("Speed - " + str(int(curs_mas[1].percent * 100)) + "%", 1, (0, 0, 0))
-    l6 = f2.render("Speed gener. food - " + str(int(curs_mas[2].percent * 100)) + "%", 1, (0, 0, 0))
+    l1 = F1.render("Alive      - " + str(alive), 1, (0, 0, 0))
+    l2 = F1.render("Food      - " + str(int(len(fd_gr) / COUNT_FD * 100)) + "%", 1, (0, 0, 0))
+    l3 = F1.render("Days      - " + str(days), 1, (0, 0, 0))
+    l4 = F1.render("Food - " + str(COUNT_FD), 1, (0, 0, 0))
+    l5 = F1.render("Speed - " + str(int(curs_mas[1].percent * 100)) + "%", 1, (0, 0, 0))
+    l6 = F2.render("Speed gener. food - " + str(int(curs_mas[2].percent * 100)) + "%", 1, (0, 0, 0))
 
     screen.fill((0, 0, 0))
     set_pan.fill((210, 210, 210))
@@ -249,6 +249,7 @@ while run:
 
         # рождение
         if crt_mas[i].energy > 9.8:
+            print("<!>")
             if focus >= count_crt:
                 focus += 1
             for j in range(int(9.8 // crt_mas[i].birth_enr)):
@@ -534,6 +535,11 @@ while run:
 
     if visible:
         statistics.draw(window)
+        for i in range(len(statistics.buttons)):
+            if exist_in(pg.mouse.get_pos(), statistics.buttons[i].rect):
+                statistics.buttons[i].focus()
+            else:
+                statistics.buttons[i].unfocus()
     pg.time.delay(int(50 * (1 - SPEED)))
 
     pg.display.update()

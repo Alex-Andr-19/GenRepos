@@ -1,7 +1,7 @@
 import pygame as pg
 from random import randint as rand
 from math import fabs, cos, sin, pi, ceil
-from lib_func import clamp
+from lib_func import clamp, create_sprite
 from settings import *
 
 
@@ -32,23 +32,14 @@ class Creature:
         self.terretory = pg.sprite.Group()
 
         self.body = pg.sprite.Sprite()
-        self.body.image = pg.Surface([w, h])
-        self.body.rect = self.body.image.get_rect()
         if start_cords[0] or start_cords[1]:
-            self.body.rect.x = start_cords[0]
-            self.body.rect.y = start_cords[1]
+            self.body = create_sprite(start_cords[0], start_cords[1], w, h, color1)
         else:
-            self.body.rect.x = rand(0, SCR_W - w)
-            self.body.rect.y = rand(0, SCR_H - h)
-        self.body.image.fill(color1)
+            self.body = create_sprite(rand(0, SCR_W - w), rand(0, SCR_H - h), w, h, color1)
 
-        self.sens_circ = pg.sprite.Sprite()
-        self.sens_circ.image = pg.Surface([sens * 2, sens * 2])
-        self.sens_circ.rect = self.sens_circ.image.get_rect()
-        self.sens_circ.rect.x = self.body.rect.x - sens + int(w / 2) - 1
-        self.sens_circ.rect.y = self.body.rect.y - sens + int(h / 2) - 1
-        self.sens_circ.image.fill(fon_c)
-        self.sens_circ.image.set_colorkey(fon_c)
+        self.sens_circ = create_sprite(self.body.rect.x - sens + int(w / 2) - 1,
+                                       self.body.rect.y - sens + int(h / 2) - 1,
+                                       sens * 2, sens * 2, fon_c)
 
         self.terretory.add(self.sens_circ)
         self.terretory.add(self.body)
