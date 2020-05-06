@@ -1,6 +1,7 @@
 from math import sqrt
 from settings import Set_W
 import pygame as pg
+import Statistics
 
 # необходимые математические функции
 def distance_s(a, b):
@@ -115,6 +116,15 @@ def redraw_cursors(focus, count_crt, curs_mas):
         curs_mas[0].redraw((curs_mas[0].percent * (Set_W - 20), 0))
         curs_mas[1].redraw((curs_mas[1].percent * (Set_W - 20), 0))
         curs_mas[2].redraw((curs_mas[2].percent * (Set_W - 20), 0))
+
+def new_day():
+    Statistics.BIRTH_PER_DAY.append(Statistics.birth_at_day)
+    Statistics.DEAD_PER_DAY.append(Statistics.dead_at_day)
+    Statistics.MUT_PER_DAY.append(Statistics.mut_at_day)
+
+    Statistics.birth_at_day = 0
+    Statistics.dead_at_day = 0
+    Statistics.mut_at_day = 0
 
 '''
 # функция вращения по окружности по часовой стрелке на целый круг со стартового угла

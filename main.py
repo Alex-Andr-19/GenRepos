@@ -1,7 +1,6 @@
-import pygame as pg
+import matplotlib.pyplot as plt
 
-import Statistics
-
+from Statistics import Statistic
 from Food import Food
 from Creature import Creature
 from Cursor import Cursor
@@ -28,7 +27,8 @@ screen = window.subsurface((Set_W, 0, SCR_W, SCR_H))
 set_pan = window.subsurface((0, 0, Set_W, SCR_H))
 btn_mas = [Button(186, 2, "img/pause.png"), Button(218, 2, "img/reset.png"), Button(2, 5, " Statistic", 93, 22)]
 
-statistics = subwindow(95, 27, 900, 510)
+stat_w = subwindow(95, 27, 900, 510)
+stat = Statistic()
 visible = 0
 
 run = 1
@@ -58,8 +58,6 @@ for i in range(3):
 
 for i in range(len(btn_mas)):
     btn_gr.add(btn_mas[i])
-# for i in range(len(statistics.buttons)):
-    # btn_gr.add(statistics.buttons[i])
 
 index = [fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr) for i in range(count_crt)]
 
@@ -95,6 +93,8 @@ while run:
         if 0 <= focus < count_crt:
             crt_mas[focus].focus = 0
         focus = cycle(focus + 1, count_crt + 2, 0)
+        while focus < count_crt and not crt_mas[focus].energy:
+            focus = cycle(focus + 1, count_crt + 2, 0)
         if 0 <= focus < count_crt:
             crt_mas[focus].focus = 1
             dna.redraw(crt_mas[focus])
@@ -102,13 +102,28 @@ while run:
             redraw_cursors(focus, count_crt, curs_mas)
             x = curs_mas[focus - count_crt].percent * (Set_W - 20)
             curs_mas[focus - count_crt].redraw((x, 0))
+    # Пауза
+    if keys[pg.K_SPACE] and pg.time.get_ticks() - time_of_press > 300:
+        # чтобы курсор не проскакивал
+        time_of_press = pg.time.get_ticks()
+        PAUSE = not PAUSE
+        if PAUSE:
+            btn_mas[0].redraw("img/play.png")
+        else:
+            btn_mas[0].redraw("img/pause.png")
+    # Закрытие окна статистики
+    if keys[pg.K_ESCAPE] and visible:
+        visible = 0
+        btn_mas[2].unfocus()
+        PAUSE = 0
+
+        btn_mas[0].redraw("img/pause.png")
 
     # отрисовка всех объектов
     crts_gr.draw(screen)
     fd_gr.draw(screen)
     crtb_gr.draw(screen)
     btn_gr.draw(set_pan)
-
 
     # "обнуление" фокуса
     if pg.mouse.get_pressed()[0] and not focus >= count_crt:
@@ -162,31 +177,52 @@ while run:
 
         # передвижение выбранной особи
         keys = pg.key.get_pressed()
+        control = 0
         if keys[pg.K_RIGHT] and 0 <= focus < count_crt:
+            control = 1
             crt_mas[focus].body.rect.x += 1
             crt_mas[focus].sens_circ.rect.x += 1
         elif keys[pg.K_UP] and 0 <= focus < count_crt:
+            control = 1
             crt_mas[focus].body.rect.y -= 1
             crt_mas[focus].sens_circ.rect.y -= 1
         elif keys[pg.K_LEFT] and 0 <= focus < count_crt:
+            control = 1
             crt_mas[focus].body.rect.x -= 1
             crt_mas[focus].sens_circ.rect.x -= 1
         elif keys[pg.K_DOWN] and 0 <= focus < count_crt:
+            control = 1
             crt_mas[focus].body.rect.y += 1
             crt_mas[focus].sens_circ.rect.y += 1
         elif keys[pg.K_ESCAPE]:
             focus = -1
+        # Убийство особи
+        elif keys[pg.K_DELETE] and 0 <= focus < count_crt and crt_mas[focus].energy:
+            stat.dead_at_day += 1
+            crt_mas[focus].energy = 0
+            if 0 <= index[focus] < COUNT_FD:
+                tmp = crt_mas[focus].go_to_target(fd_mas[index[focus]])
+            elif 0 <= index[focus]:
+                tmp = crt_mas[focus].go_to_target(crt_mas[clamp(index[focus] - len(fd_mas), len(crt_mas) - 1)].body)
+            stat.dead_at_day += 1
+
+            index[focus] = -1
+            deadb_gr.add(crt_mas[focus].body)
+            deads_gr.add(crt_mas[focus].sens_circ)
+            crt_mas[focus].color2 = (60, 60, 60)
+            focus = -1
+
 
 # ниже функция clamp используется в качестве костыля, потому что без неё почему-то происходит 'index out of range'
 
-        if 0 <= index[i] < COUNT_FD and not PAUSE:
+        if 0 <= index[i] < COUNT_FD and not PAUSE and (focus != i or not control):
             # к еде
             if (crt_mas[i].body.rect.x != fd_mas[index[i]].rect.x or
                 crt_mas[i].body.rect.y != fd_mas[index[i]].rect.y) and \
                 index[i] != -1:
 
                 tmp = crt_mas[i].go_to_target(fd_mas[index[i]])
-        elif 0 <= index[i] and not PAUSE:
+        elif 0 <= index[i] and not PAUSE and (focus != i or not control):
             # к особи
             if (crt_mas[i].body.rect.x != crt_mas[clamp(index[i] - COUNT_FD, count_crt - 1)].body.rect.x or
                 crt_mas[i].body.rect.y != crt_mas[clamp(index[i] - COUNT_FD, count_crt - 1)].body.rect.y) and \
@@ -196,6 +232,9 @@ while run:
 
         # регестрация гибели
         if tmp == 0:
+            # Statistics
+            stat.dead_at_day += 1
+
             index[i] = -1
             deadb_gr.add(crt_mas[i].body)
             deads_gr.add(crt_mas[i].sens_circ)
@@ -208,7 +247,7 @@ while run:
         # фокус на особь
         if crt_mas[i].sens_circ.rect.x <= pg.mouse.get_pos()[0] - Set_W <= crt_mas[i].sens_circ.rect.x + crt_mas[i].sens_circ.rect.w and \
                 crt_mas[i].sens_circ.rect.y <= pg.mouse.get_pos()[1] <= crt_mas[i].sens_circ.rect.y + crt_mas[
-            i].sens_circ.rect.h and pg.mouse.get_pressed()[0]:
+            i].sens_circ.rect.h and pg.mouse.get_pressed()[0] and crt_mas[i].energy:
             if focus < count_crt:
                 crt_mas[focus].focus = 0
             focus = i
@@ -216,6 +255,7 @@ while run:
             dna.normal()
             dna.redraw(crt_mas[i])
             redraw_dna = 1
+            break
 
         hit_gr = pg.sprite.spritecollide(crt_mas[i].body, fd_gr, True)
         # съела ли особь еду
@@ -231,6 +271,9 @@ while run:
                     index[i] >= COUNT_FD and \
                     crt_mas[clamp(index[i] - COUNT_FD, count_crt - 1)].energy and \
                     crt_mas[i].weight - 10 > crt_mas[clamp(index[i] - COUNT_FD, count_crt - 1)].weight:
+                # Statistics
+                stat.dead_at_day += 1
+
                 crt_mas[index[i] - COUNT_FD].body.kill()
                 crt_mas[index[i] - COUNT_FD].sens_circ.kill()
                 crt_mas[i].energy += 0.5 * crt_mas[index[i] - COUNT_FD].weight / 64
@@ -249,10 +292,12 @@ while run:
 
         # рождение
         if crt_mas[i].energy > 9.8:
-            print("<!>")
             if focus >= count_crt:
                 focus += 1
             for j in range(int(9.8 // crt_mas[i].birth_enr)):
+                # Statistics
+                stat.birth_at_day += 1
+
                 # вычисление координат дочерней особи
                 cords = (crt_mas[i].body.rect.x + WCR, crt_mas[i].body.rect.y + HCR)
 
@@ -264,11 +309,17 @@ while run:
                 # скорость
                 chance = rand(0, 100)
                 if 90 <= chance < 95 and crt_mas[-1].speed != clamp(crt_mas[-1].speed - 1, 5, 1):
+                    # Statistics
+                    stat.mut_at_day += 1
+
                     crt_mas[-1].color2 = (clamp(crt_mas[-1].color2[0] - 13),
                                           crt_mas[-1].color2[1],
                                           crt_mas[-1].color2[2])
                     crt_mas[-1].speed = clamp(crt_mas[-1].speed - 1, 5, 1)
                 elif chance >= 95 and crt_mas[-1].speed != clamp(crt_mas[-1].speed + 1, 5, 1):
+                    # Statistics
+                    stat.mut_at_day += 1
+
                     crt_mas[-1].color2 = (clamp(crt_mas[-1].color2[0] + 13),
                                           crt_mas[-1].color2[1],
                                           crt_mas[-1].color2[2])
@@ -277,11 +328,17 @@ while run:
                 # размножение
                 chance = rand(0, 100)
                 if 90 <= chance < 95 and crt_mas[-1].birth_enr != clamp(crt_mas[-1].birth_enr + 1, 5, 1):
+                    # Statistics
+                    stat.mut_at_day += 1
+
                     crt_mas[-1].color2 = (crt_mas[-1].color2[0],
                                           clamp(crt_mas[-1].color2[1] - 13),
                                           crt_mas[-1].color2[2])
                     crt_mas[-1].birth_enr = clamp(crt_mas[-1].birth_enr + 1, 5, 2)
                 elif chance >= 95 and crt_mas[-1].birth_enr != clamp(crt_mas[-1].birth_enr - 1, 5, 1):
+                    # Statistics
+                    stat.mut_at_day += 1
+
                     crt_mas[-1].color2 = (crt_mas[-1].color2[0],
                                           clamp(crt_mas[-1].color2[1] + 13),
                                           crt_mas[-1].color2[2])
@@ -289,27 +346,45 @@ while run:
 
                 # размер: ширина
                 chance = rand(0, 100)
-                if 90 <= chance < 95:
+                if 0: # 90 <= chance < 95:
+                    # Statistics
+                    stat.mut_at_day += 1
+
                     crt_mas[-1].w += 2
                     crt_mas[-1].weight = crt_mas[-1].w * crt_mas[-1].h
-                elif 95 <= chance:
+                elif 0: # 95 <= chance:
+                    # Statistics
+                    stat.mut_at_day += 1
+
                     crt_mas[-1].w -= 2
                     crt_mas[-1].weight = crt_mas[-1].w * crt_mas[-1].h
 
                 # размер: высота
                 chance = rand(0, 100)
-                if 90 <= chance < 95:
+                if 0: # 90 <= chance < 95:
+                    # Statistics
+                    stat.mut_at_day += 1
+
                     crt_mas[-1].h += 2
                     crt_mas[-1].weight = crt_mas[-1].w * crt_mas[-1].h
-                elif 95 <= chance:
+                elif 0:# 95 <= chance:
+                    # Statistics
+                    stat.mut_at_day += 1
+
                     crt_mas[-1].h -= 2
                     crt_mas[-1].weight = crt_mas[-1].w * crt_mas[-1].h
 
                 # размер видимого поля
                 chance = rand(0, 100)
                 if 90 <= chance < 95:
+                    # Statistics
+                    stat.mut_at_day += 1
+
                     crt_mas[-1].expantion(clamp(crt_mas[-1].sens + 2, 45))
                 elif 95 <= chance:
+                    # Statistics
+                    stat.mut_at_day += 1
+
                     crt_mas[-1].expantion(clamp(crt_mas[-1].sens - 2, 45, 15))
 
                 # высчитывание цели для дочерней особи
@@ -338,15 +413,40 @@ while run:
             index[i] = fn_nrst_trg(crt_mas[i], crt_mas, fd_mas, crtb_gr, deadb_gr, fd_gr,
                                    [index[j] for j in range(count_crt) if j != i])
 
+    # "Текучая" статистика
+    stat.avarage_day = 0
+    stat.oldest_alive_breed = 0
+    stat.oldest_creature = 0
+    stat.youngest_alive_breed = 1000000
+    for i in range(count_crt):
+        if crt_mas[i].energy:
+            if crt_mas[i].breed > stat.oldest_alive_breed:
+                stat.oldest_alive_breed = crt_mas[i].breed
+            if crt_mas[i].breed < stat.youngest_alive_breed:
+                stat.youngest_alive_breed = crt_mas[i].breed
+            if crt_mas[i].days > stat.oldest_creature:
+                stat.oldest_creature = crt_mas[i].days
+
+        stat.avarage_day += 1
+    stat.avarage_day //= count_crt
+    stat.avarage_day = clamp(stat.avarage_day, 1000000, 1)
+    if (pg.time.get_ticks() - START_TIME) % 150 == 0:
+        stat_w.redraw(stat.oldest_alive_breed,
+                      stat.youngest_alive_breed,
+                      stat.avarage_day,
+                      stat.oldest_creature)
+
     # генерация нового дня
     if len(fd_gr) < COUNT_FD // 100 * 6:
+        stat.new_day(alive)
+        # stat.get()
         # генерация нового поля еды
         for i in range(COUNT_FD):
             if fd_mas[i] not in fd_gr:
                 fd_mas[i].rect.x = rand(WCR, SCR_W - WCR)
                 fd_mas[i].rect.y = rand(HCR, SCR_H - HCR)
                 fd_mas[i].image.fill((0, 255, 0))
-                fd_mas[i].color  = (0, 255, 0)
+                fd_mas[i].color = (0, 255, 0)
                 fd_gr.add(fd_mas[i])
 
         # навый подсчет целей-еды для каждой живой особи (чтобы не бежали все в одну сторону)
@@ -356,8 +456,7 @@ while run:
             crt_mas[i].days += 1
 
         # очистка "памяти" от съеденных особей
-        index     = [index[i] for i in range(count_crt) if crt_mas[i].body in crtb_gr]
-        # crt_mas   = [crt_mas[i] for i in range(count_crt) if crt_mas[i].body in crtb_gr]
+        index = [index[i] for i in range(count_crt) if crt_mas[i].body in crtb_gr]
         tmp = []
         for i in range(count_crt):
             if crt_mas[i].body in crtb_gr:
@@ -371,6 +470,7 @@ while run:
 
         # обновление дня
         days += 1
+
     # обновление информации
     brd_info = ""
     vis_gr   = []
@@ -399,6 +499,7 @@ while run:
 
                 # Ресет
                 if i == 1:
+                    stat.reset()
                     count_crt = COUNT_CRT
 
                     fd_gr = pg.sprite.Group()
@@ -533,13 +634,32 @@ while run:
     set_pan.blit(l5, (Set_W * (1 - 150/Set_W) / 2, 215))
     set_pan.blit(l6, (10, 295))
 
+    # Отрисовка окна статистики
     if visible:
-        statistics.draw(window)
-        for i in range(len(statistics.buttons)):
-            if exist_in(pg.mouse.get_pos(), statistics.buttons[i].rect):
-                statistics.buttons[i].focus()
+        stat_w.draw(window)
+        for i in range(len(stat_w.buttons)):
+            if exist_in(pg.mouse.get_pos(), stat_w.buttons[i].rect):
+                stat_w.buttons[i].focus()
             else:
-                statistics.buttons[i].unfocus()
+                stat_w.buttons[i].unfocus()
+    for i in range(len(stat_w.buttons)):
+        if exist_in(pg.mouse.get_pos(), stat_w.buttons[i].rect)\
+                and pg.mouse.get_pressed()[0]\
+                and pg.time.get_ticks() - time_of_press > 200:
+            time_of_press = pg.time.get_ticks()
+            if i == 0:
+                plt.bar([i + 1 for i in range(days - 1)], stat.BIRTH_PER_DAY)
+                plt.show()
+            if i == 1:
+                plt.bar([i + 1 for i in range(days)], stat.ALIVE_PER_DAY)
+                plt.show()
+            if i == 2:
+                plt.bar([i + 1 for i in range(days - 1)], stat.DEAD_PER_DAY)
+                plt.show()
+            if i == 3:
+                plt.bar([i + 1 for i in range(days - 1)], stat.MUT_PER_DAY)
+                plt.show()
+
     pg.time.delay(int(50 * (1 - SPEED)))
 
     pg.display.update()
