@@ -1,7 +1,7 @@
 import pygame as pg
 from lib_func import create_sprite
 from settings import F1, F2
-from Button import Button
+from Button import Button, Radio_Button
 from Statistics import Statistic
 
 class subwindow(pg.sprite.Group):
@@ -28,13 +28,7 @@ class subwindow(pg.sprite.Group):
         youngest_alive_breed_str = F2.render("The Youngest Alive Breed - " + str(stat.youngest_alive_breed), 1, (0, 0, 0))
         average_day_str = F2.render("Averange Day - " + str(stat.avarage_day), 1, (0, 0, 0))
         oldest_creature_str = F2.render("The Oldest Creature - " + str(stat.oldest_creature), 1, (0, 0, 0))
-        domin_kind = F2.render("Dominant Kind:", 1, (0, 0, 0))
-
-        v = F2.render("V - 10", 1, (0, 0, 0))
-        birth = F2.render("Birth - 10", 1, (0, 0, 0))
-        sens = F2.render("Sense - 10", 1, (0, 0, 0))
-        w_ = F2.render("W - 10", 1, (0, 0, 0))
-        h_ = F2.render("H - 10", 1, (0, 0, 0))
+        mut_str = F2.render("Mutation", 1, (0, 0, 0))
 
         self.add(self.bg)
         self.add(self.hr_g)
@@ -53,7 +47,13 @@ class subwindow(pg.sprite.Group):
         self.buttons.append(Button(x + 10, y + 80, " Count of Alive", 143, 25))
         self.buttons.append(Button(x + 10, y + 110, " Count of Dead", 143, 25))
         self.buttons.append(Button(x + 10, y + 140, " Count of Mutation", 178, 25))
-        self.buttons.append(Button(x + 10, y + 170, " Dom_Kind / Other", 178, 25))
+
+        # Кнопки настроек
+        self.buttons.append(Radio_Button(x + 40, y + h // 2 + 75, " Speed", 157, 25))
+        self.buttons.append(Radio_Button(x + 40, y + h // 2 + 100, " Reproduction", 157, 25))
+        self.buttons.append(Radio_Button(x + 40, y + h // 2 + 125, " Width", 157, 25))
+        self.buttons.append(Radio_Button(x + 40, y + h // 2 + 150, " Height", 157, 25))
+        self.buttons.append(Radio_Button(x + 40, y + h // 2 + 175, " Sense", 157, 25))
 
         self.add(self.buttons)
 
@@ -63,37 +63,26 @@ class subwindow(pg.sprite.Group):
         self.bg.image.blit(average_day_str, (10 + w // 2, 100))
         self.bg.image.blit(oldest_creature_str, (10 + w // 2, 125))
 
-        self.bg.image.blit(domin_kind, (13 + w // 2 + w // 8, 175))
-        self.bg.image.blit(v, (10 + w // 2, 200))
-        self.bg.image.blit(birth, (70 + w // 2, 200))
-        self.bg.image.blit(sens, (160 + w // 2, 200))
-        self.bg.image.blit(w_, (270 + w // 2, 200))
-        self.bg.image.blit(h_, (330 + w // 2, 200))
+        # Расг=ширенные настройки
+        self.bg.image.blit(mut_str, (w // 16 + 22, y + h // 2 + 25))
 
-    def redraw(self, oab, yab, avd, oc, dk=0):
+    def redraw(self, oab, yab, avd, oc):
         self.bg.image = pg.Surface([self.w, self.h])
         self.bg.image.fill((220, 220, 220))
 
         per_day_str = F1.render("Per Day", 1, (0, 0, 0))
         digits_str = F1.render("Digits", 1, (0, 0, 0))
         adv_set = F1.render("Advanced Settings", 1, (0, 0, 0))
+        mut_str = F2.render("Mutation", 1, (0, 0, 0))
 
         self.bg.image.blit(per_day_str, (190, 10))
         self.bg.image.blit(digits_str, (190 + self.w // 2, 10))
         self.bg.image.blit(adv_set, (self.w // 2 - 100, self.h // 2 + 10))
 
-        # print(oab)
         oldest_alive_breed_str = F2.render("The Oldest Alive Breed - " + str(oab), 1, (0, 0, 0))
         youngest_alive_breed_str = F2.render("The Youngest Alive Breed - " + str(yab), 1, (0, 0, 0))
         average_day_str = F2.render("Averange Day - " + str(avd), 1, (0, 0, 0))
         oldest_creature_str = F2.render("The Oldest Creature - " + str(oc), 1, (0, 0, 0))
-        domin_kind = F2.render("Dominant Kind:", 1, (0, 0, 0))
-
-        v = F2.render("V - 10", 1, (0, 0, 0))
-        birth = F2.render("Birth - 10", 1, (0, 0, 0))
-        sens = F2.render("Sense - 10", 1, (0, 0, 0))
-        w_ = F2.render("W - 10", 1, (0, 0, 0))
-        h_ = F2.render("H - 10", 1, (0, 0, 0))
 
         # Численные данные
         self.bg.image.blit(oldest_alive_breed_str, (10 + self.w // 2, 50))
@@ -101,11 +90,6 @@ class subwindow(pg.sprite.Group):
         self.bg.image.blit(average_day_str, (10 + self.w // 2, 100))
         self.bg.image.blit(oldest_creature_str, (10 + self.w // 2, 125))
 
-        self.bg.image.blit(domin_kind, (13 + self.w // 2 + self.w // 8, 175))
-        self.bg.image.blit(v, (10 + self.w // 2, 200))
-        self.bg.image.blit(birth, (70 + self.w // 2, 200))
-        self.bg.image.blit(sens, (160 + self.w // 2, 200))
-        self.bg.image.blit(w_, (270 + self.w // 2, 200))
-        self.bg.image.blit(h_, (330 + self.w // 2, 200))
-
+        # Расширенные настройки
+        self.bg.image.blit(mut_str, (self.w // 16 + 22, self.y + self.h // 2 + 25))
 

@@ -1,5 +1,4 @@
 from settings import COUNT_CRT
-from Creature import Creature
 
 class Statistic:
     def __init__(self):
@@ -23,8 +22,6 @@ class Statistic:
         self.youngest_alive_breed = 1
         self.avarage_day = 1
         self.oldest_creature = 1
-
-        self.dom_kind = Creature(8, 8)
 
     def reset(self):
         self.ALIVE_PER_DAY = [COUNT_CRT]

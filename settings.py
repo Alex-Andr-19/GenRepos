@@ -24,6 +24,13 @@ PAUSE = 0
 SPEED = 0.8
 SP_GEN_FD = 0.615
 
+# расширенные настройки
+Sp_MUT = 1
+R_MUT = 1
+W_MUT = 1
+H_MUT = 1
+Se_MUT = 1
+
 # настройки особи
 WCR = HCR = 8
 SENS = 30

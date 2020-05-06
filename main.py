@@ -308,7 +308,7 @@ while run:
                 # мутация
                 # скорость
                 chance = rand(0, 100)
-                if 90 <= chance < 95 and crt_mas[-1].speed != clamp(crt_mas[-1].speed - 1, 5, 1):
+                if 90 <= chance < 95 and crt_mas[-1].speed != clamp(crt_mas[-1].speed - 1, 5, 1) and Sp_MUT:
                     # Statistics
                     stat.mut_at_day += 1
 
@@ -316,7 +316,7 @@ while run:
                                           crt_mas[-1].color2[1],
                                           crt_mas[-1].color2[2])
                     crt_mas[-1].speed = clamp(crt_mas[-1].speed - 1, 5, 1)
-                elif chance >= 95 and crt_mas[-1].speed != clamp(crt_mas[-1].speed + 1, 5, 1):
+                elif chance >= 95 and crt_mas[-1].speed != clamp(crt_mas[-1].speed + 1, 5, 1) and Sp_MUT:
                     # Statistics
                     stat.mut_at_day += 1
 
@@ -327,7 +327,7 @@ while run:
 
                 # размножение
                 chance = rand(0, 100)
-                if 90 <= chance < 95 and crt_mas[-1].birth_enr != clamp(crt_mas[-1].birth_enr + 1, 5, 1):
+                if 90 <= chance < 95 and crt_mas[-1].birth_enr != clamp(crt_mas[-1].birth_enr + 1, 5, 1) and R_MUT:
                     # Statistics
                     stat.mut_at_day += 1
 
@@ -335,7 +335,7 @@ while run:
                                           clamp(crt_mas[-1].color2[1] - 13),
                                           crt_mas[-1].color2[2])
                     crt_mas[-1].birth_enr = clamp(crt_mas[-1].birth_enr + 1, 5, 2)
-                elif chance >= 95 and crt_mas[-1].birth_enr != clamp(crt_mas[-1].birth_enr - 1, 5, 1):
+                elif chance >= 95 and crt_mas[-1].birth_enr != clamp(crt_mas[-1].birth_enr - 1, 5, 1) and R_MUT:
                     # Statistics
                     stat.mut_at_day += 1
 
@@ -346,13 +346,13 @@ while run:
 
                 # размер: ширина
                 chance = rand(0, 100)
-                if 0: # 90 <= chance < 95:
+                if 90 <= chance < 95 and W_MUT:
                     # Statistics
                     stat.mut_at_day += 1
 
                     crt_mas[-1].w += 2
                     crt_mas[-1].weight = crt_mas[-1].w * crt_mas[-1].h
-                elif 0: # 95 <= chance:
+                elif 95 <= chance and W_MUT:
                     # Statistics
                     stat.mut_at_day += 1
 
@@ -361,13 +361,13 @@ while run:
 
                 # размер: высота
                 chance = rand(0, 100)
-                if 0: # 90 <= chance < 95:
+                if 90 <= chance < 95 and H_MUT:
                     # Statistics
                     stat.mut_at_day += 1
 
                     crt_mas[-1].h += 2
                     crt_mas[-1].weight = crt_mas[-1].w * crt_mas[-1].h
-                elif 0:# 95 <= chance:
+                elif 95 <= chance and H_MUT:
                     # Statistics
                     stat.mut_at_day += 1
 
@@ -376,12 +376,12 @@ while run:
 
                 # размер видимого поля
                 chance = rand(0, 100)
-                if 90 <= chance < 95:
+                if 90 <= chance < 95 and Se_MUT:
                     # Statistics
                     stat.mut_at_day += 1
 
                     crt_mas[-1].expantion(clamp(crt_mas[-1].sens + 2, 45))
-                elif 95 <= chance:
+                elif 95 <= chance and Se_MUT:
                     # Statistics
                     stat.mut_at_day += 1
 
@@ -541,7 +541,7 @@ while run:
 
     # изменение настроек
     for i in range(3):
-        if exist_in(pg.mouse.get_pos(), curs_mas[i].rect) and pg.mouse.get_pressed()[0]:
+        if exist_in(pg.mouse.get_pos(), curs_mas[i].rect) and pg.mouse.get_pressed()[0] and visible == 0:
             curs_mas[i].redraw(pg.mouse.get_pos())
 
             # количество еды
@@ -648,17 +648,29 @@ while run:
                 and pg.time.get_ticks() - time_of_press > 200:
             time_of_press = pg.time.get_ticks()
             if i == 0:
-                plt.bar([i + 1 for i in range(days - 1)], stat.BIRTH_PER_DAY)
+                plt.plot([i + 1 for i in range(days - 1)], stat.BIRTH_PER_DAY)
                 plt.show()
             if i == 1:
-                plt.bar([i + 1 for i in range(days)], stat.ALIVE_PER_DAY)
+                plt.plot([i + 1 for i in range(days)], stat.ALIVE_PER_DAY)
                 plt.show()
             if i == 2:
-                plt.bar([i + 1 for i in range(days - 1)], stat.DEAD_PER_DAY)
+                plt.plot([i + 1 for i in range(days - 1)], stat.DEAD_PER_DAY)
                 plt.show()
             if i == 3:
-                plt.bar([i + 1 for i in range(days - 1)], stat.MUT_PER_DAY)
+                plt.plot([i + 1 for i in range(days - 1)], stat.MUT_PER_DAY)
                 plt.show()
+            if i >= 4:
+                stat_w.buttons[i].active = not stat_w.buttons[i].active
+                if i == 4:
+                    Sp_MUT = not Sp_MUT
+                if i == 5:
+                    R_MUT = not R_MUT
+                if i == 6:
+                    W_MUT = not W_MUT
+                if i == 7:
+                    H_MUT = not H_MUT
+                if i == 8:
+                    Se_MUT = not Se_MUT
 
     pg.time.delay(int(50 * (1 - SPEED)))
 
